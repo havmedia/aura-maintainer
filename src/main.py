@@ -142,8 +142,7 @@ def generate_password(length=PASSWORD_LENGTH) -> str:
 def init(domain):
     # Check if Docker is installed & running
     docker_version, compose_version = get_docker_versions()
-
-    if not docker or not compose_version:
+    if docker_version is None or compose_version is None:
         click.echo("Docker and/or Docker Compose are not installed or running.", err=True)
         exit(2)
 
