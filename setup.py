@@ -9,7 +9,7 @@ setup(
         'click',
         'pyyaml',
         'docker',
-        'psycopg'
+        'psycopg-binary',
     ],
     entry_points={
         'console_scripts': [
