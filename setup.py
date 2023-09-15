@@ -13,7 +13,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'aura-maintainer2=src.main:cli'
+            'aura-maintainer=src.main:cli'
         ],
     },
 )
