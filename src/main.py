@@ -140,6 +140,13 @@ def generate_password(length=PASSWORD_LENGTH) -> str:
 @cli.command()
 @click.argument('domain')
 def init(domain):
+    # Check if Docker is installed & running
+    docker_version, compose_version = get_docker_versions()
+
+    if not docker or not compose_version:
+        click.echo("Docker and/or Docker Compose are not installed or running.", err=True)
+        exit(2)
+
     # Check if .env file already exists
     if compose_manager.initiated:
         click.echo("Configuration has already been initialized.", err=True)
