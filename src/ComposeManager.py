@@ -4,8 +4,8 @@ from typing import Union
 
 import click
 import yaml
-from Services import ComposeService
-from errors import ComposeFileNotFoundException, ServiceAlreadyExistsException, ServiceDoesNotExistException
+from src.Services import ComposeService
+from src.errors import ComposeFileNotFoundException, ServiceAlreadyExistsException, ServiceDoesNotExistException
 
 
 class ComposeManager:

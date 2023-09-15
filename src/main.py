@@ -1,7 +1,4 @@
-from typing import Union, Dict, Any
-
 import click
-import os
 import socket
 import json
 import secrets
@@ -10,10 +7,11 @@ import subprocess
 import psycopg
 import time
 
-from ComposeManager import ComposeManager
-from EnvManager import EnvManager
-from Services import OdooComposeService, ProxyComposeService, PostgresComposeService, KwkhtmltopdfComposeService
-from errors import ServiceAlreadyExistsException, ServiceDoesNotExistException
+from src.ComposeManager import ComposeManager
+from src.EnvManager import EnvManager
+from src.Services import OdooComposeService, ProxyComposeService, PostgresComposeService, KwkhtmltopdfComposeService
+from src.errors import ServiceAlreadyExistsException, ServiceDoesNotExistException
+
 
 PASSWORD_LENGTH = 32
 
@@ -25,6 +23,7 @@ SERVICE_READY_WAIT_TIME = 300  # 300 seconds = 5 minutes
 
 compose_manager = ComposeManager()
 env_manager = EnvManager()
+
 
 @click.group()
 def cli():
@@ -229,8 +228,10 @@ def generate(dashboard):
 
     # Store domain in the proxy service for later reference
     proxy_service = ProxyComposeService(name='proxy', domain=domain, dashboard=dashboard)
-    live_service = OdooComposeService(name='live', domain=domain, db_password='${LIVE_DB_PASSWORD}', admin_passwd=generate_password()) # Generate a random password each time because it will never be needed
-    pre_service = OdooComposeService(name='pre', domain=f'pre.{domain}', db_password='${PRE_DB_PASSWORD}', admin_passwd=generate_password())
+    live_service = OdooComposeService(name='live', domain=domain, db_password='${LIVE_DB_PASSWORD}',
+                                      admin_passwd=generate_password())  # Generate a random password each time because it will never be needed
+    pre_service = OdooComposeService(name='pre', domain=f'pre.{domain}', db_password='${PRE_DB_PASSWORD}',
+                                     admin_passwd=generate_password())
     db_service = PostgresComposeService(name='db')
     kwkhtmltopdf_service = KwkhtmltopdfComposeService(name='kwkhtmltopdf')
 
@@ -245,6 +246,7 @@ def generate(dashboard):
     compose_manager.save()
 
     click.echo(f"Docker Compose file 'docker-compose.yml' updated successfully.")
+
 
 @cli.group()
 def manage_dev_env():
@@ -274,7 +276,8 @@ def add(pr_number):
     domain = env_manager.read_value('DOMAIN')
     service_name = f'odoo_dev_pr{pr_number}'
 
-    dev_service = OdooComposeService(name=service_name, domain=f'pr{pr_number}.{domain}', db_password=f'{service_name}_DB_PASSWORD', admin_passwd=generate_password())
+    dev_service = OdooComposeService(name=service_name, domain=f'pr{pr_number}.{domain}',
+                                     db_password=f'{service_name}_DB_PASSWORD', admin_passwd=generate_password())
 
     try:
         compose_manager.add_service(dev_service)

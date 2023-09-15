@@ -1,4 +1,4 @@
-from errors import EnvVarAlreadyExistsException, EnvVarDoesNotExistException
+from src.errors import EnvVarAlreadyExistsException, EnvVarDoesNotExistException
 import os
 
 ENV_PATH = '.env'

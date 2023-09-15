@@ -11,8 +11,9 @@ setup(
         'docker',
         'pyscopg2'
     ],
-    entry_points='''
-        [console_scripts]
-        aura-maintainer=src.main:cli
-    ''',
+    entry_points={
+        'console_scripts': [
+            'aura-maintainer2=src.main:cli'
+        ],
+    },
 )
