@@ -1,0 +1,4 @@
+click
+pyyaml
+docker
+pyscopg2
