@@ -1,4 +1,5 @@
-click
-pyyaml
-docker
-pyscopg2
+click~=8.1.3
+pyyaml~=6.0
+docker~=6.1.3
+psycopg
+setuptools~=65.5.1
