@@ -64,7 +64,7 @@ def get_docker_versions():
 
     try:
         docker_compose_version = \
-            subprocess.run(['docker compose', '--version'], capture_output=True, text=True).stdout.strip().split()[
+            subprocess.run(['docker', 'compose', 'version'], capture_output=True, text=True).stdout.strip().split()[
                 3].replace('v', '')
     except Exception:
         docker_compose_version = None
