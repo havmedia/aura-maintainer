@@ -57,10 +57,10 @@ class ComposeManager:
     def up(self, services: Union[bool, list] = False):
         if services:
             # Only start the services specified
-            command = ['docker compose', 'up', '-d'] + list(services)
+            command = ['docker', 'compose', 'up', '-d'] + list(services)
         else:
             # Start all services
-            command = ['docker compose', 'up', '-d']
+            command = ['docker', 'compose', 'up', '-d']
 
         try:
             subprocess.check_call(command)
