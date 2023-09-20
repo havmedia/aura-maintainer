@@ -88,6 +88,31 @@ class TestComposeManager(unittest.TestCase):
             manager.up()
         mock_click.assert_called_with("Failed to start services: Command 'cmd' returned non-zero exit status 1.", err=True)
 
+    def test_set_service_new_service(self):
+        # Test adding a new service using set_service
+        service = ComposeService(name="new_service", image="new_image")
+        manager = ComposeManager()
+        manager.add_service = MagicMock()
+        manager.update_service = MagicMock()
+        manager.services = {}  # Ensure it's empty for the test
+
+        manager.set_service(service)
+
+        manager.add_service.assert_called_with(service)
+        manager.update_service.assert_not_called()
+
+    def test_set_service_existing_service(self):
+        # Test updating an existing service using set_service
+        service = ComposeService(name="existing_service", image="new_image")
+        manager = ComposeManager()
+        manager.add_service = MagicMock()
+        manager.update_service = MagicMock()
+        manager.services = {"existing_service": service}
+
+        manager.set_service(service)
+
+        manager.add_service.assert_not_called()
+        manager.update_service.assert_called_with(service)
 
 if __name__ == '__main__':
     unittest.main()
