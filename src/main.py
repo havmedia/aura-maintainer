@@ -157,6 +157,8 @@ def init(domain):
             err=True)
         exit(1)
 
+    # TODO: Check if we have access to images
+
     master_db_password = generate_password()
 
     live_db_password = generate_password()

@@ -1,7 +1,7 @@
-IMAGE_TRAEFIK = 'ghcr.io/havmedia/traefik:v2.10'
-IMAGE_WHOAMI = 'ghcr.io/havmedia/odoo:16.0'
-IMAGE_KWKHTMLTOPDF = 'ghcr.io/havmedia/kwkhtmltopdf:0.12.5'
-IMAGE_POSTGRES = 'ghcr.io/havmedia/postgres:15-alpine'
+IMAGE_TRAEFIK = 'registry.hav.media/aura_odoo/traefik:v2.10'
+IMAGE_WHOAMI = 'registry.hav.media/aura_odoo/odoo:16.0'
+IMAGE_KWKHTMLTOPDF = 'registry.hav.media/aura_odoo/kwkhtmltopdf:0.12.5'
+IMAGE_POSTGRES = 'registry.hav.media/aura_odoo/postgres:15-alpine'
 
 POSTGRES_PORT = 5432
 POSTGRES_USER = 'postgres'
