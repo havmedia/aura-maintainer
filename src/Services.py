@@ -60,10 +60,10 @@ class ProxyComposeService(ComposeService):
         if dashboard:
             config['labels'] += [
                 'traefik.enable=true',
-                f'traefik.https.routers.proxy.rule=Host(`proxy.{domain}`)',
-                'traefik.https.routers.proxy.entrypoints=websecure',
-                'traefik.https.routers.proxy.service=api@internal',
-                'traefik.https.routers.proxy.middlewares=basic_auth@file',
+                f'traefik.http.routers.proxy.rule=Host(`proxy.{domain}`)',
+                'traefik.http.routers.proxy.entrypoints=websecure',
+                'traefik.http.routers.proxy.service=api@internal',
+                'traefik.http.routers.proxy.middlewares=basic_auth@file',
             ]
             config['command'] += [
                 '--api.dashboard=true',
@@ -91,17 +91,17 @@ class OdooComposeService(ComposeService):
             ],
             'labels': [
                 'traefik.enable=true',
-                f'traefik.https.routers.{name}.rule=Host(`{domain}`)',
-                f'traefik.https.routers.{name}.service={name}',
-                f'traefik.https.routers.{name}.entrypoints=websecure',
-                f'traefik.https.routers.{name}.middlewares=basic_auth@file,gzip@file',
-                f'traefik.https.services.{name}.loadbalancer.server.port=8069',
+                f'traefik.http.routers.{name}.rule=Host(`{domain}`)',
+                f'traefik.http.routers.{name}.service={name}',
+                f'traefik.http.routers.{name}.entrypoints=websecure',
+                f'traefik.http.routers.{name}.middlewares=basic_auth@file,gzip@file',
+                f'traefik.http.services.{name}.loadbalancer.server.port=8069',
                 # Websocket
-                f'traefik.https.routers.{name}-websocket.rule=Path(`/websocket`) && Host(`{domain}`)',
-                f'traefik.https.routers.{name}-websocket.service={name}-websocket',
-                f'traefik.https.routers.{name}-websocket.entrypoints=web',
-                f'traefik.https.routers.{name}-websocket.middlewares=basic_auth@file,websocketHeader@file,gzip@file',
-                f'traefik.https.services.{name}-websocket.loadbalancer.server.port=8072',
+                f'traefik.http.routers.{name}-websocket.rule=Path(`/websocket`) && Host(`{domain}`)',
+                f'traefik.http.routers.{name}-websocket.service={name}-websocket',
+                f'traefik.http.routers.{name}-websocket.entrypoints=websecure',
+                f'traefik.http.routers.{name}-websocket.middlewares=basic_auth@file,websocketHeader@file,gzip@file',
+                f'traefik.http.services.{name}-websocket.loadbalancer.server.port=8072',
             ],
             'depends_on': [
                 'db',
