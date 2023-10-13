@@ -98,7 +98,7 @@ class OdooComposeService(ComposeService):
                 f'traefik.http.routers.{name}.entrypoints=websecure',
                 f'traefik.http.routers.{name}.middlewares=basic_auth@file,gzip@file',
                 f'traefik.http.services.{name}.loadbalancer.server.port=8069',
-                f'traefik.http.routers.{name}.tls.certresolver=main_resolver'
+                f'traefik.http.routers.{name}.tls.certresolver=main_resolver',
                 # Websocket
                 f'traefik.http.routers.{name}-websocket.rule=Path(`/websocket`) && Host(`{domain}`)',
                 f'traefik.http.routers.{name}-websocket.service={name}-websocket',
