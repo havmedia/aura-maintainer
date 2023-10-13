@@ -39,7 +39,10 @@ class ProxyComposeService(ComposeService):
                 '--certificatesresolvers.main_resolver.acme.storage=/letsencrypt/acme.json'
                 '--ping',
             ],
-            'ports': ['80:80'],
+            'ports': [
+                '80:80',
+                '443:443'
+            ],
             'volumes': [
                 '/var/run/docker.sock:/var/run/docker.sock',
                 f'./volumes/{name}/letsencrypt:/letsencrypt'
@@ -62,6 +65,7 @@ class ProxyComposeService(ComposeService):
                 'traefik.http.routers.proxy.entrypoints=websecure',
                 'traefik.http.routers.proxy.service=api@internal',
                 'traefik.http.routers.proxy.middlewares=basic_auth@file',
+                'traefik.http.routers.proxy.tls.certresolver=main_resolver'
             ]
             config['command'] += [
                 '--api.dashboard=true',
@@ -94,12 +98,14 @@ class OdooComposeService(ComposeService):
                 f'traefik.http.routers.{name}.entrypoints=websecure',
                 f'traefik.http.routers.{name}.middlewares=basic_auth@file,gzip@file',
                 f'traefik.http.services.{name}.loadbalancer.server.port=8069',
+                f'traefik.http.routers.{name}.tls.certresolver=main_resolver'
                 # Websocket
                 f'traefik.http.routers.{name}-websocket.rule=Path(`/websocket`) && Host(`{domain}`)',
                 f'traefik.http.routers.{name}-websocket.service={name}-websocket',
                 f'traefik.http.routers.{name}-websocket.entrypoints=websecure',
                 f'traefik.http.routers.{name}-websocket.middlewares=basic_auth@file,websocketHeader@file,gzip@file',
                 f'traefik.http.services.{name}-websocket.loadbalancer.server.port=8072',
+                f'traefik.http.routers.{name}-websocket.tls.certresolver=main_resolver'
             ],
             'depends_on': [
                 'db',
