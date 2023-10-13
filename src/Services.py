@@ -61,7 +61,7 @@ class ProxyComposeService(ComposeService):
             config['labels'] += [
                 'traefik.enable=true',
                 f'traefik.https.routers.proxy.rule=Host(`proxy.{domain}`)',
-                'traefik.https.routers.proxy.entrypoints=web',
+                'traefik.https.routers.proxy.entrypoints=websecure',
                 'traefik.https.routers.proxy.service=api@internal',
                 'traefik.https.routers.proxy.middlewares=basic_auth@file',
             ]
@@ -93,7 +93,7 @@ class OdooComposeService(ComposeService):
                 'traefik.enable=true',
                 f'traefik.https.routers.{name}.rule=Host(`{domain}`)',
                 f'traefik.https.routers.{name}.service={name}',
-                f'traefik.https.routers.{name}.entrypoints=web',
+                f'traefik.https.routers.{name}.entrypoints=websecure',
                 f'traefik.https.routers.{name}.middlewares=basic_auth@file,gzip@file',
                 f'traefik.https.services.{name}.loadbalancer.server.port=8069',
                 # Websocket
