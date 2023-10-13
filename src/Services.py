@@ -36,7 +36,10 @@ class ProxyComposeService(ComposeService):
                 '--ping'
             ],
             'ports': ['80:80'],
-            'volumes': ['/var/run/docker.sock:/var/run/docker.sock'],
+            'volumes': [
+                '/var/run/docker.sock:/var/run/docker.sock',
+                f'./volumes/{name}/letsencrypt:/letsencrypt'
+            ],
             'healthcheck': {
                 'test': 'traefik healthcheck --ping',
                 'interval': '5s',
@@ -45,16 +48,22 @@ class ProxyComposeService(ComposeService):
             },
             'labels': [
                 # TODO: Add middleware for ip whitelist
+                'providers.docker.exposedbydefault=false',
+                'entrypoints.websecure.address=:443',
+                'certificatesresolvers.main_resolver.acme.tlschallenge=true',
+                # TODO: Make configurable
+                'certificatesresolvers.main_resolver.acme.email=accounts@hav.media',
+                'certificatesresolvers.main_resolver.acme.storage=/letsencrypt/acme.json'
             ]
         }
 
         if dashboard:
             config['labels'] += [
                 'traefik.enable=true',
-                f'traefik.http.routers.proxy.rule=Host(`proxy.{domain}`)',
-                'traefik.http.routers.proxy.entrypoints=web',
-                'traefik.http.routers.proxy.service=api@internal',
-                'traefik.http.routers.proxy.middlewares=basic_auth@file',
+                f'traefik.https.routers.proxy.rule=Host(`proxy.{domain}`)',
+                'traefik.https.routers.proxy.entrypoints=web',
+                'traefik.https.routers.proxy.service=api@internal',
+                'traefik.https.routers.proxy.middlewares=basic_auth@file',
             ]
             config['command'] += [
                 '--api.dashboard=true',
@@ -82,17 +91,17 @@ class OdooComposeService(ComposeService):
             ],
             'labels': [
                 'traefik.enable=true',
-                f'traefik.http.routers.{name}.rule=Host(`{domain}`)',
-                f'traefik.http.routers.{name}.service={name}',
-                f'traefik.http.routers.{name}.entrypoints=web',
-                f'traefik.http.routers.{name}.middlewares=basic_auth@file,gzip@file',
-                f'traefik.http.services.{name}.loadbalancer.server.port=8069',
+                f'traefik.https.routers.{name}.rule=Host(`{domain}`)',
+                f'traefik.https.routers.{name}.service={name}',
+                f'traefik.https.routers.{name}.entrypoints=web',
+                f'traefik.https.routers.{name}.middlewares=basic_auth@file,gzip@file',
+                f'traefik.https.services.{name}.loadbalancer.server.port=8069',
                 # Websocket
-                f'traefik.http.routers.{name}-websocket.rule=Path(`/websocket`) && Host(`{domain}`)',
-                f'traefik.http.routers.{name}-websocket.service={name}-websocket',
-                f'traefik.http.routers.{name}-websocket.entrypoints=web',
-                f'traefik.http.routers.{name}-websocket.middlewares=basic_auth@file,websocketHeader@file,gzip@file',
-                f'traefik.http.services.{name}-websocket.loadbalancer.server.port=8072',
+                f'traefik.https.routers.{name}-websocket.rule=Path(`/websocket`) && Host(`{domain}`)',
+                f'traefik.https.routers.{name}-websocket.service={name}-websocket',
+                f'traefik.https.routers.{name}-websocket.entrypoints=web',
+                f'traefik.https.routers.{name}-websocket.middlewares=basic_auth@file,websocketHeader@file,gzip@file',
+                f'traefik.https.services.{name}-websocket.loadbalancer.server.port=8072',
             ],
             'depends_on': [
                 'db',
