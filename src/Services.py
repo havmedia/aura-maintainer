@@ -32,8 +32,12 @@ class ProxyComposeService(ComposeService):
                 '--providers.docker=true',
                 '--providers.docker.exposedbydefault=false',
                 '--providers.file.directory=/etc/traefik',
-                '--entrypoints.web.address=:80',
-                '--ping'
+                '--entrypoints.websecure.address=:443',
+                '--certificatesresolvers.main_resolver.acme.tlschallenge=true',
+                # TODO: Make configurable
+                '--certificatesresolvers.main_resolver.acme.email=accounts@hav.media',
+                '--certificatesresolvers.main_resolver.acme.storage=/letsencrypt/acme.json'
+                '--ping',
             ],
             'ports': ['80:80'],
             'volumes': [
@@ -48,12 +52,6 @@ class ProxyComposeService(ComposeService):
             },
             'labels': [
                 # TODO: Add middleware for ip whitelist
-                'providers.docker.exposedbydefault=false',
-                'entrypoints.websecure.address=:443',
-                'certificatesresolvers.main_resolver.acme.tlschallenge=true',
-                # TODO: Make configurable
-                'certificatesresolvers.main_resolver.acme.email=accounts@hav.media',
-                'certificatesresolvers.main_resolver.acme.storage=/letsencrypt/acme.json'
             ]
         }
 
