@@ -63,6 +63,3 @@ class TestEnvManager(unittest.TestCase):
         manager.save()
         print(mock_file().writelines.call_args_list)
         mock_file().writelines.assert_any_call(['TEST_KEY=TEST_VALUE\n', 'ANOTHER_KEY=ANOTHER_VALUE\n'])
-
-if __name__ == '__main__':
-    unittest.main()

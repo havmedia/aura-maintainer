@@ -12,7 +12,6 @@ from src.EnvManager import EnvManager
 from src.Services import OdooComposeService, ProxyComposeService, PostgresComposeService, KwkhtmltopdfComposeService
 from src.errors import ServiceAlreadyExistsException, ServiceDoesNotExistException
 
-
 PASSWORD_LENGTH = 32
 
 DB_PORT = 5432
@@ -36,19 +35,22 @@ def cli():
 
 
 def get_local_ip():
-    hostname = socket.gethostname()
-    return socket.gethostbyname(hostname)
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.254.254.254', 1))
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+    return ip
 
 
 def check_domain_and_subdomain(domain):
     local_ip = get_local_ip()
-    try:
-        domain_ip = socket.gethostbyname(domain)
-        test_subdomain_ip = socket.gethostbyname(f'test.{domain}')
-        return domain_ip == local_ip and test_subdomain_ip == local_ip
-    except socket.gaierror:
-        # TODO: For Debugging = True Change it back!!!
-        return True
+    domain_ip = socket.gethostbyname(domain)
+    test_subdomain_ip = socket.gethostbyname(f'test.{domain}')
+    return domain_ip == local_ip and test_subdomain_ip == local_ip
 
 
 def get_docker_client():
