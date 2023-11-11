@@ -52,7 +52,3 @@ class TestKwkhtmltopdfComposeService(unittest.TestCase):
     def test_init(self):
         kwk_service = KwkhtmltopdfComposeService('kwk')
         self.assertEqual(kwk_service.to_dict()['image'], IMAGE_KWKHTMLTOPDF)
-
-
-if __name__ == '__main__':
-    unittest.main()

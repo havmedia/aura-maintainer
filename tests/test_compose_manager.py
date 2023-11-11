@@ -114,5 +114,3 @@ class TestComposeManager(unittest.TestCase):
         manager.add_service.assert_not_called()
         manager.update_service.assert_called_with(service)
 
-if __name__ == '__main__':
-    unittest.main()
