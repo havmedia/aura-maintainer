@@ -1,5 +1,5 @@
 IMAGE_TRAEFIK = 'registry.hav.media/aura_odoo/traefik:v2.10'
-IMAGE_WHOAMI = 'registry.hav.media/aura_odoo/odoo:16.0'
+IMAGE_ODOO = 'registry.hav.media/aura_odoo/odoo'
 IMAGE_KWKHTMLTOPDF = 'registry.hav.media/aura_odoo/kwkhtmltopdf:0.12.5'
 IMAGE_POSTGRES = 'registry.hav.media/aura_odoo/postgres:15-alpine'
 
@@ -76,10 +76,10 @@ class ProxyComposeService(ComposeService):
 
 
 class OdooComposeService(ComposeService):
-    def __init__(self, name: str, domain: str, db_password: str, admin_passwd: str, **kwargs):
+    def __init__(self, name: str, domain: str, db_password: str, admin_passwd: str, odoo_version: str, **kwargs):
         config = {
             'name': name,
-            'image': IMAGE_WHOAMI,
+            'image': f'{IMAGE_ODOO}:{odoo_version}',
             'restart': 'always',
             'environment': [
                 f'DB_NAME={name}',
