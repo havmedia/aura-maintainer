@@ -146,7 +146,8 @@ def generate_password(length=PASSWORD_LENGTH) -> str:
 
 @cli.command()
 @click.argument('domain')
-def init(domain):
+@click.argument('version')
+def init(domain, version):
     # Check if .env file already exists
     if compose_manager.initiated:
         click.echo("Configuration has already been initialized.", err=True)
@@ -168,6 +169,7 @@ def init(domain):
 
     # Save data to .env file
     env_manager.add_value('DOMAIN', domain)
+    env_manager.add_value('VERSION', version)
     env_manager.add_value('MASTER_DB_PASSWORD', master_db_password)
     env_manager.add_value('LIVE_DB_PASSWORD', live_db_password)
     env_manager.add_value('PRE_DB_PASSWORD', pre_db_password)
@@ -234,13 +236,14 @@ def generate(dashboard):
         click.echo("Please run the 'init' command before generating the configuration.", err=True)
         exit(1)
     domain = env_manager.read_value('DOMAIN')
+    version = env_manager.read_value('VERSION')
 
     # Store domain in the proxy service for later reference
     proxy_service = ProxyComposeService(name='proxy', domain=domain, dashboard=dashboard)
     live_service = OdooComposeService(name='live', domain=domain, db_password='${LIVE_DB_PASSWORD}',
-                                      admin_passwd=generate_password())  # Generate a random password each time because it will never be needed
+                                      admin_passwd=generate_password(), odoo_version=version)  # Generate a random password each time because it will never be needed
     pre_service = OdooComposeService(name='pre', domain=f'pre.{domain}', db_password='${PRE_DB_PASSWORD}',
-                                     admin_passwd=generate_password())
+                                     admin_passwd=generate_password(), odoo_version=version)
     db_service = PostgresComposeService(name='db')
     kwkhtmltopdf_service = KwkhtmltopdfComposeService(name='kwkhtmltopdf')
 
@@ -283,10 +286,11 @@ def add(pr_number):
         exit(1)
 
     domain = env_manager.read_value('DOMAIN')
+    version = env_manager.read_value('VERSION')
     service_name = f'odoo_dev_pr{pr_number}'
 
     dev_service = OdooComposeService(name=service_name, domain=f'pr{pr_number}.{domain}',
-                                     db_password=f'{service_name}_DB_PASSWORD', admin_passwd=generate_password())
+                                     db_password=f'{service_name}_DB_PASSWORD', admin_passwd=generate_password(), odoo_version=version)
 
     try:
         compose_manager.add_service(dev_service)

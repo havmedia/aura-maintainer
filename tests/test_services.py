@@ -35,9 +35,10 @@ class TestProxyComposeService(unittest.TestCase):
 class TestOdooComposeService(unittest.TestCase):
 
     def test_init(self):
-        odoo_service = OdooComposeService('odoo', 'odoo.test.com', 'db_pass', 'admin_pass')
+        odoo_service = OdooComposeService('odoo', 'odoo.test.com', 'db_pass', 'admin_pass', '16.0')
         self.assertIn('DB_PASSWORD=db_pass', odoo_service.to_dict()['environment'])
         self.assertIn('ADMIN_PASSWD=admin_pass', odoo_service.to_dict()['environment'])
+        self.assertEqual(odoo_service.to_dict()['image'], 'registry.hav.media/aura_odoo/odoo:16.0')
 
 
 class TestPostgresComposeService(unittest.TestCase):
