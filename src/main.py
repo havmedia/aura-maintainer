@@ -79,6 +79,7 @@ def get_docker_versions():
 def inspect(return_json):
     initialized = compose_manager.initiated
     domain = env_manager.read_value('DOMAIN') if initialized else 'Not initialized'
+    odoo_version = env_manager.read_value('VERSION') if initialized else 'Not initialized'
 
     # Count the number of dev environments with the "pr_" prefix
     num_dev_envs = sum(1 for service_name in compose_manager.services.keys() if service_name.startswith("odoo_dev"))
@@ -104,6 +105,7 @@ def inspect(return_json):
             "state": {
                 "initialized": initialized,
                 "domain": domain,
+                "odoo_version": odoo_version,
                 "num_dev_envs": num_dev_envs,
                 "docker_version": docker_version,
                 "docker_compose_version": docker_compose_version,
@@ -123,6 +125,7 @@ def inspect(return_json):
         click.echo("State:")
         click.echo(f"  Initialized: {'Yes' if initialized else 'No'}")
         click.echo(f"  Domain: {domain}")
+        click.echo(f"  Odoo version: {odoo_version}")
         click.echo(f"  Number of dev environments: {num_dev_envs}")
         click.echo(f"  Docker version: {docker_version}")
         click.echo(f"  Docker Compose version: {docker_compose_version}")
