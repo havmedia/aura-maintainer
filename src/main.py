@@ -244,7 +244,7 @@ def generate(dashboard):
     # Store domain in the proxy service for later reference
     proxy_service = ProxyComposeService(name='proxy', domain=domain, dashboard=dashboard)
     live_service = OdooComposeService(name='live', domain=domain, db_password='${LIVE_DB_PASSWORD}',
-                                      admin_passwd=generate_password(), odoo_version=version)  # Generate a random password each time because it will never be needed
+                                      admin_passwd=generate_password(), odoo_version=version, basic_auth=False)  # Generate a random password each time because it will never be needed
     pre_service = OdooComposeService(name='pre', domain=f'pre.{domain}', db_password='${PRE_DB_PASSWORD}',
                                      admin_passwd=generate_password(), odoo_version=version)
     db_service = PostgresComposeService(name='db')

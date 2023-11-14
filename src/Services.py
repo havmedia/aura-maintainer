@@ -76,7 +76,7 @@ class ProxyComposeService(ComposeService):
 
 
 class OdooComposeService(ComposeService):
-    def __init__(self, name: str, domain: str, db_password: str, admin_passwd: str, odoo_version: str, **kwargs):
+    def __init__(self, name: str, domain: str, db_password: str, admin_passwd: str, odoo_version: str, basic_auth: bool = True, **kwargs):
         config = {
             'name': name,
             'image': f'{IMAGE_ODOO}:{odoo_version}',
@@ -116,6 +116,17 @@ class OdooComposeService(ComposeService):
                 f'./volumes/{name}:/data/odoo/'
             ]
         }
+
+        if basic_auth:
+            config['labels'] += [
+                f'traefik.http.routers.{name}.middlewares=basic_auth@file,gzip@file',
+                f'traefik.http.routers.{name}-websocket.middlewares=basic_auth@file,websocketHeader@file,gzip@file',
+            ]
+        else:
+            config['labels'] += [
+                f'traefik.http.routers.{name}.middlewares=gzip@file',
+                f'traefik.http.routers.{name}-websocket.middlewares=websocketHeader@file,gzip@file',
+            ]
         config.update(kwargs)
         super().__init__(**config)
 
