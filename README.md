@@ -46,7 +46,7 @@ This repo contains the python Setup Maintainer for odoo setups. It is used to se
 The init command is used to initialize the setup maintainer. It will create a new setup maintainer project in the current directory.
 
 ```sh
-python aura-maintainer init DOMAIN
+python aura-maintainer init DOMAIN VERSION
 ```
 
 ### Generate
