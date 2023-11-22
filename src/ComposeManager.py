@@ -69,3 +69,19 @@ class ComposeManager:
         except subprocess.CalledProcessError as e:
             click.echo(f"Failed to start services: {e}", err=True)
             raise
+
+    def stop(self, services: Union[bool, list] = False):
+        if services:
+            # Only sop the services specified
+            command = ['docker', 'compose', 'stop'] + list(services)
+        else:
+            # Stop all services
+            command = ['docker', 'compose', 'stop']
+
+        try:
+            subprocess.check_call(command)
+            click.echo("Services stopped successfully.")
+            return True
+        except subprocess.CalledProcessError as e:
+            click.echo(f"Failed to stop services: {e}", err=True)
+            raise

@@ -77,6 +77,14 @@ The change domain command is used to change the domain of the current setup. It 
 python aura-maintainer change_domain NEW_DOMAIN
 ```
 
+### Refresh Environment
+
+Copys the live database and filestore to the desired environment. The database gets escaped.
+
+```sh
+python aura-maintainer refresh-env ENVIRONMENT
+```
+
 ### Manage Dev Environments
 
 The manage dev environments command provides multiple subcommands to manage the dev environments.
