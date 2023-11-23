@@ -88,6 +88,32 @@ class TestComposeManager(unittest.TestCase):
             manager.up()
         mock_click.assert_called_with("Failed to start services: Command 'cmd' returned non-zero exit status 1.", err=True)
 
+    @patch('subprocess.check_call', return_value=0)
+    @patch('click.echo')
+    def test_stop_with_services(self, mock_click, mock_subprocess):
+        manager = ComposeManager()
+        manager.stop(services=['test_service'])
+        mock_subprocess.assert_called_with(['docker', 'compose', 'stop', 'test_service'])
+        mock_click.assert_called_with("Services stopped successfully.")
+
+    @patch('subprocess.check_call', return_value=0)
+    @patch('click.echo')
+    def test_stop_without_services(self, mock_click, mock_subprocess):
+        manager = ComposeManager()
+        manager.stop()
+        mock_subprocess.assert_called_with(['docker', 'compose', 'stop'])
+        mock_click.assert_called_with("Services stopped successfully.")
+
+    @patch('subprocess.check_call', side_effect=subprocess.CalledProcessError(1, 'cmd'))
+    @patch('click.echo')
+    def test_stop_failure(self, mock_click, mock_subprocess):
+        manager = ComposeManager()
+        with self.assertRaises(subprocess.CalledProcessError):
+            manager.stop()
+        mock_click.assert_called_with("Failed to stop services: Command 'cmd' returned non-zero exit status 1.",
+                                      err=True)
+
+
     def test_set_service_new_service(self):
         # Test adding a new service using set_service
         service = ComposeService(name="new_service", image="new_image")

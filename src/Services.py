@@ -23,7 +23,7 @@ class ComposeService:
 
 
 class ProxyComposeService(ComposeService):
-    def __init__(self, name: str, domain: str, dashboard: bool = False, **kwargs):
+    def __init__(self, name: str, domain: str, dashboard: bool = False, https=True, **kwargs):
         config = {
             'name': name,
             'image': IMAGE_TRAEFIK,
@@ -33,10 +33,11 @@ class ProxyComposeService(ComposeService):
                 '--providers.docker.exposedbydefault=false',
                 '--providers.file.directory=/etc/traefik',
                 '--entrypoints.websecure.address=:443',
+                '--entrypoints.web.address=:80',
                 '--certificatesresolvers.main_resolver.acme.tlschallenge=true',
                 # TODO: Make configurable
                 '--certificatesresolvers.main_resolver.acme.email=accounts@hav.media',
-                '--certificatesresolvers.main_resolver.acme.storage=/letsencrypt/acme.json'
+                '--certificatesresolvers.main_resolver.acme.storage=/letsencrypt/acme.json',
                 '--ping',
             ],
             'ports': [
@@ -62,21 +63,24 @@ class ProxyComposeService(ComposeService):
             config['labels'] += [
                 'traefik.enable=true',
                 f'traefik.http.routers.proxy.rule=Host(`proxy.{domain}`)',
-                'traefik.http.routers.proxy.entrypoints=websecure',
+                f'traefik.http.routers.proxy.entrypoints={"websecure" if https else "web"}',
                 'traefik.http.routers.proxy.service=api@internal',
-                'traefik.http.routers.proxy.middlewares=basic_auth@file',
-                'traefik.http.routers.proxy.tls.certresolver=main_resolver'
+                'traefik.http.routers.proxy.middlewares=basic_auth@file'
             ]
             config['command'] += [
                 '--api.dashboard=true',
             ]
+
+            if https:
+                config['labels'].append('traefik.http.routers.proxy.tls.certresolver=main_resolver')
 
         config.update(kwargs)
         super().__init__(**config)
 
 
 class OdooComposeService(ComposeService):
-    def __init__(self, name: str, domain: str, db_password: str, admin_passwd: str, odoo_version: str, basic_auth: bool = True, **kwargs):
+    def __init__(self, name: str, domain: str, db_password: str, admin_passwd: str, odoo_version: str,
+                 basic_auth: bool = True, https: bool = True, **kwargs):
         config = {
             'name': name,
             'image': f'{IMAGE_ODOO}:{odoo_version}',
@@ -95,15 +99,13 @@ class OdooComposeService(ComposeService):
                 'traefik.enable=true',
                 f'traefik.http.routers.{name}.rule=Host(`{domain}`)',
                 f'traefik.http.routers.{name}.service={name}',
-                f'traefik.http.routers.{name}.entrypoints=websecure',
+                f'traefik.http.routers.{name}.entrypoints={"websecure" if https else "web"}',
                 f'traefik.http.services.{name}.loadbalancer.server.port=8069',
-                f'traefik.http.routers.{name}.tls.certresolver=main_resolver',
                 # Websocket
                 f'traefik.http.routers.{name}-websocket.rule=Path(`/websocket`) && Host(`{domain}`)',
                 f'traefik.http.routers.{name}-websocket.service={name}-websocket',
-                f'traefik.http.routers.{name}-websocket.entrypoints=websecure',
+                f'traefik.http.routers.{name}-websocket.entrypoints={"websecure" if https else "web"}',
                 f'traefik.http.services.{name}-websocket.loadbalancer.server.port=8072',
-                f'traefik.http.routers.{name}-websocket.tls.certresolver=main_resolver'
             ],
             'depends_on': [
                 'db',
@@ -114,6 +116,12 @@ class OdooComposeService(ComposeService):
                 f'./volumes/{name}:/data/odoo/'
             ]
         }
+
+        if https:
+            config['labels'] += [
+                f'traefik.http.routers.{name}-websocket.tls.certresolver=main_resolver'
+                f'traefik.http.routers.{name}.tls.certresolver=main_resolver',
+            ]
 
         if basic_auth:
             config['labels'] += [
