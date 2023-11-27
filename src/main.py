@@ -14,7 +14,7 @@ import psycopg
 from src.ComposeManager import ComposeManager
 from src.EnvManager import EnvManager
 from src.Services import OdooComposeService, ProxyComposeService, PostgresComposeService, KwkhtmltopdfComposeService
-from src.errors import ServiceAlreadyExistsException, ServiceDoesNotExistException
+from src.errors import ServiceAlreadyExistsException, ServiceDoesNotExistException, EnvVarDoesNotExistException
 
 PASSWORD_LENGTH = 32
 

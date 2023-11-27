@@ -59,6 +59,12 @@ class ProxyComposeService(ComposeService):
             ]
         }
 
+        if https:
+            config['command'] += [
+                "--entrypoints.web.http.redirections.entrypoint.to=websecure",
+                "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+            ]
+
         if dashboard:
             config['labels'] += [
                 'traefik.enable=true',
@@ -119,7 +125,7 @@ class OdooComposeService(ComposeService):
 
         if https:
             config['labels'] += [
-                f'traefik.http.routers.{name}-websocket.tls.certresolver=main_resolver'
+                f'traefik.http.routers.{name}-websocket.tls.certresolver=main_resolver',
                 f'traefik.http.routers.{name}.tls.certresolver=main_resolver',
             ]
 
