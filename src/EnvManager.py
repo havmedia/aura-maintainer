@@ -21,10 +21,13 @@ class EnvManager:
             self.initiated = True
         return env_data
 
-    def read_value(self, key):
+    def read_value(self, key: str, default: str = None):
         """Returns the value of the key if it exists, else None."""
         key = key.upper()
         if key not in self.env_data:
+            if default is not None:
+                self.add_value(key, default)
+                return default
             raise EnvVarDoesNotExistException('The key "{key}" is missing in the env file')
 
         return self.env_data.get(key, None)
