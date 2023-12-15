@@ -515,6 +515,8 @@ def require_database(func):
 @require_database
 @prevent_on_enviroment('live')
 def refresh_enviroment(enviroment):
+    db_password = env_manager.read_value('MASTER_DB_PASSWORD')
+
     if enviroment != 'pre':
         # Check if the environment exists
         if enviroment not in compose_manager.services.keys() or not enviroment.startswith('odoo'):
@@ -524,11 +526,12 @@ def refresh_enviroment(enviroment):
     click.echo("* Stopping environment")
     compose_manager.stop([enviroment])
     click.echo("* Removing old database")
-    DatabaseManager(enviroment, 'postgres').drop_db()
+    DatabaseManager(enviroment, 'postgres', db_password).drop_db()
     click.echo("* Copy new database")
-    path = DatabaseManager('live', 'postgres').dump_db('/tmp')
+    path = DatabaseManager('live', 'postgres', db_password).dump_db('/tmp')
     click.echo('* Restore dump')
-    DatabaseManager.from_dump(enviroment, enviroment, path)
+    enviroment_db_password = env_manager.read_value(f'{enviroment}_DB_PASSWORD'.upper())
+    DatabaseManager.from_dump(enviroment, enviroment, enviroment_db_password, path)
     click.echo('* Remove dump')
     remove_file_in_container('db', path)
     click.echo('* Copy Filestore')
