@@ -10,7 +10,7 @@ class TestDump(unittest.TestCase):
 
     def setUp(self):
         self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres')
+        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'password')
 
     @patch('uuid.uuid4')
     @patch('subprocess.run')
@@ -41,14 +41,14 @@ class TestDump(unittest.TestCase):
 class TestFromDump(unittest.TestCase):
     def setUp(self):
         self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres')
+        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'password')
 
     @patch('subprocess.run')
     def test_from_dump(self, mock_run):
         # Mock subprocess
         mock_run.return_value = MagicMock(returncode=1)
 
-        new_db_manager = DatabaseManager.from_dump('new_db', 'user', '/path/to/dump')
+        new_db_manager = DatabaseManager.from_dump('new_db', 'user', 'password', '/path/to/dump')
 
         mock_run.assert_called()
         self.assertIsInstance(new_db_manager, DatabaseManager)
@@ -60,7 +60,7 @@ class TestFromDump(unittest.TestCase):
         mock_run.return_value = MagicMock(returncode=0)
 
         with self.assertRaises(DatabaseAlreadyExistsException):
-            DatabaseManager.from_dump('new_db', 'user', '/path/to/dump')
+            DatabaseManager.from_dump('new_db', 'user', 'password', '/path/to/dump')
 
         mock_run.assert_called_once()
 
@@ -72,13 +72,13 @@ class TestFromDump(unittest.TestCase):
                                                              stderr='Error')
 
         with self.assertRaises(subprocess.CalledProcessError):
-            DatabaseManager.from_dump('new_db', 'user', '/path/to/dump')
+            DatabaseManager.from_dump('new_db', 'user', 'password', '/path/to/dump')
 
 
 class TestDropDb(unittest.TestCase):
     def setUp(self):
         self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres')
+        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'password')
 
     @patch('subprocess.run')
     def test_drop_db(self, mock_run):
@@ -115,7 +115,7 @@ class TestDropDb(unittest.TestCase):
 class TestDbExists(unittest.TestCase):
     def setUp(self):
         self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres')
+        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'password')
 
     @patch('subprocess.run')
     def test_db_exists(self, mock_run):
@@ -149,7 +149,7 @@ class TestDbExists(unittest.TestCase):
 class TestDbCreate(unittest.TestCase):
     def setUp(self):
         self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres')
+        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'passwordd')
 
     @patch('subprocess.run')
     @patch('src.main.DatabaseManager.db_exists')

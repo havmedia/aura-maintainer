@@ -1,15 +1,23 @@
 import subprocess
 import uuid
+import psycopg
 from typing import Self
 
 from src.errors import OperationOnDatabaseDeniedException, DatabaseAlreadyExistsException
 
+DB_PORT = 5432
 
 class DatabaseManager:
-    def __init__(self, name: str, user):
+    def __init__(self, name: str, user: str, password: str, port: str = DB_PORT):
         self.name = name
         self.exists = self.db_exists(self.name)
         self.user = user
+        self.password = password
+        self.port = port
+
+    def connect(self):
+        return psycopg.connect(
+            f"host=127.0.0.1 port={self.port} dbname={self.name} user={self.user} password={self.password}")
 
     def dump_db(self, destination_path: str) -> str:
         path = f'{destination_path}/{self.name}_{uuid.uuid4()}.dump'
@@ -46,7 +54,7 @@ class DatabaseManager:
         return True
 
     @classmethod
-    def from_dump(cls, name: str, user: str, path: str) -> Self:
+    def from_dump(cls, name: str, user: str, password: str, path: str) -> Self:
         if cls.db_exists(name):
             raise DatabaseAlreadyExistsException('Database already exists')
 
@@ -57,7 +65,7 @@ class DatabaseManager:
 
         result.check_returncode()
 
-        return cls(name, user)
+        return cls(name, user, password)
 
     @staticmethod
     def db_exists(name: str) -> bool:
