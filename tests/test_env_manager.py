@@ -31,6 +31,14 @@ class TestEnvManager(unittest.TestCase):
 
     @patch('builtins.open', new_callable=mock_open, read_data=READ_DATA)
     @patch('os.path.exists', return_value=True)
+    def test_read_value_with_default(self, mock_file, mock_exists):
+        manager = EnvManager()
+        self.assertEqual(manager.read_value('TEST_KEY_DOES_NOT_EXIST', 'DEFAULT'), 'DEFAULT')
+        with self.assertRaises(EnvVarDoesNotExistException):
+            manager.read_value('MISSING_KEY')
+
+    @patch('builtins.open', new_callable=mock_open, read_data=READ_DATA)
+    @patch('os.path.exists', return_value=True)
     def test_add_value(self, mock_file, mock_exist):
         manager = EnvManager()
         with self.assertRaises(EnvVarAlreadyExistsException):

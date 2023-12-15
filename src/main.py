@@ -6,15 +6,17 @@ import socket
 import subprocess
 import time
 import uuid
+from functools import wraps
 
 import click
 import docker
 import psycopg
 
 from src.ComposeManager import ComposeManager
+from src.DatabaseManager import DatabaseManager
 from src.EnvManager import EnvManager
 from src.Services import OdooComposeService, ProxyComposeService, PostgresComposeService, KwkhtmltopdfComposeService
-from src.errors import ServiceAlreadyExistsException, ServiceDoesNotExistException, EnvVarDoesNotExistException
+from src.errors import ServiceAlreadyExistsException, ServiceDoesNotExistException
 
 PASSWORD_LENGTH = 32
 
@@ -35,7 +37,39 @@ def cli():
     if docker_version is None or compose_version is None:
         click.echo("Docker and/or Docker Compose are not installed or running.", err=True)
         exit(2)
-    pass
+
+
+@cli.command('change-domain')
+@click.argument('new_domain')
+def change_domain_command(new_domain):
+    change_domain(new_domain)
+
+
+@cli.command('inspect')
+@click.option('--json', 'return_json', is_flag=True, help='Output the data in JSON format', )
+def inspect_command(return_json):
+    inspect(return_json)
+
+
+@cli.command('init')
+@click.argument('domain')
+@click.argument('version')
+@click.option('--dev', '-d', is_flag=True, help='Enable development mode. No https and other dev related things')
+def init_command(domain, version, dev):
+    init(dev, domain, version)
+
+
+@cli.command('generate')
+@click.option('--dashboard', is_flag=True,
+              help='Enable dashboard for the proxy service. Please use this only for debug purposes.')
+def generate_command(dashboard):
+    generate(dashboard)
+
+
+@cli.command('refresh-enviroment')
+@click.argument('enviroment')
+def refresh_enviroment_cli(enviroment):
+    refresh_enviroment(enviroment)
 
 
 def get_local_ip():
@@ -78,38 +112,33 @@ def get_docker_versions():
     return docker_version, docker_compose_version
 
 
-@cli.command()
-@click.option('--json', 'return_json', is_flag=True, help='Output the data in JSON format', )
 def inspect(return_json):
     initialized = compose_manager.initiated
     domain = env_manager.read_value('DOMAIN') if initialized else 'Not initialized'
     odoo_version = env_manager.read_value('VERSION') if initialized else 'Not initialized'
-
     # Count the number of dev environments with the "pr_" prefix
     num_dev_envs = sum(1 for service_name in compose_manager.services.keys() if service_name.startswith("odoo_dev"))
-
     docker_version, docker_compose_version = get_docker_versions()
     docker_installed = docker_version is not None
     docker_compose_installed = docker_compose_version is not None
     domain_configured = check_domain_and_subdomain(domain) if initialized else None
-
     try:
         db_health = get_service_health('db') if initialized else None
     except docker.errors.NotFound:
         db_health = None
-
     try:
         proxy_health = get_service_health('proxy') if initialized else None
     except docker.errors.NotFound:
         proxy_health = None
-
     if return_json:
         # Output data in JSON format
         data = {"state": {"initialized": initialized, "domain": domain, "odoo_version": odoo_version,
-            "num_dev_envs": num_dev_envs, "docker_version": docker_version,
-            "docker_compose_version": docker_compose_version, "db_health": db_health, "proxy_health": proxy_health},
-            "checklist": {"domain_configured": domain_configured, "subdomain_configured": domain_configured,
-                "docker_installed": docker_installed, "docker_compose_installed": docker_compose_installed}}
+                          "num_dev_envs": num_dev_envs, "docker_version": docker_version,
+                          "docker_compose_version": docker_compose_version, "db_health": db_health,
+                          "proxy_health": proxy_health},
+                "checklist": {"domain_configured": domain_configured, "subdomain_configured": domain_configured,
+                              "docker_installed": docker_installed,
+                              "docker_compose_installed": docker_compose_installed}}
         click.echo(json.dumps(data, indent=4))
     else:
         # Output data in human-readable format
@@ -138,30 +167,21 @@ def generate_password(length=PASSWORD_LENGTH) -> str:
     return secrets.token_urlsafe(length)
 
 
-@cli.command()
-@click.argument('domain')
-@click.argument('version')
-@click.option('--dev', '-d', is_flag=True, help='Enable development mode. No https and other dev related things')
-def init(domain, version, dev):
+def init(dev, domain, version):
     # Check if .env file already exists
     if compose_manager.initiated:
         click.echo("Configuration has already been initialized.", err=True)
         exit(1)
-
     # Check if domain and subdomains point to the current server
     if not dev and not check_domain_and_subdomain(domain):
         click.echo(
             f"Domain and subdomains must point to this server's IP. Please ensure the domain and subdomains are correctly configured.",
             err=True)
         exit(1)
-
     # TODO: Check if we have access to images
-
     master_db_password = generate_password()
-
     live_db_password = generate_password()
     pre_db_password = generate_password()
-
     # Save data to .env file
     env_manager.add_value('DEV', '1' if dev else '0')
     env_manager.add_value('DOMAIN', domain)
@@ -170,18 +190,13 @@ def init(domain, version, dev):
     env_manager.add_value('LIVE_DB_PASSWORD', live_db_password)
     env_manager.add_value('PRE_DB_PASSWORD', pre_db_password)
     env_manager.save()
-
     click.echo('Setup initialized successfully.')
-
     # Run generate command
     ctx = click.get_current_context()
     ctx.invoke(generate)
-
     compose_manager.up(['db'])
-
     postgres_add_user('live', live_db_password)
     postgres_add_user('pre', pre_db_password)
-
     compose_manager.up()
 
 
@@ -225,8 +240,6 @@ def ensure_services_healthy(service_names):
             time.sleep(5)
 
 
-@cli.command()
-@click.option('--dashboard', is_flag=True, help='Enable insecure API for the proxy service.')
 def generate(dashboard):
     if not env_manager.initiated:
         click.echo("Please run the 'init' command before generating the configuration.", err=True)
@@ -234,7 +247,6 @@ def generate(dashboard):
     domain = env_manager.read_value('DOMAIN')
     version = env_manager.read_value('VERSION')
     is_dev = True if env_manager.read_value('DEV') == '1' else False
-
     # Store domain in the proxy service for later reference
     proxy_service = ProxyComposeService(name='proxy', domain=domain, dashboard=dashboard, https=not is_dev)
     live_service = OdooComposeService(name='live', domain=domain, db_password='${LIVE_DB_PASSWORD}',
@@ -244,17 +256,14 @@ def generate(dashboard):
                                      admin_passwd=generate_password(), odoo_version=version, https=not is_dev)
     db_service = PostgresComposeService(name='db')
     kwkhtmltopdf_service = KwkhtmltopdfComposeService(name='kwkhtmltopdf')
-
     # Update services
     compose_manager.set_service(proxy_service)
     compose_manager.set_service(live_service)
     compose_manager.set_service(pre_service)
     compose_manager.set_service(db_service)
     compose_manager.set_service(kwkhtmltopdf_service)
-
     # Write Docker Compose file
     compose_manager.save()
-
     click.echo(f"Docker Compose file 'docker-compose.yml' updated successfully.")
 
 
@@ -382,65 +391,41 @@ def remove_all():
     click.echo("All development environments removed successfully.")
 
 
-@cli.command()
-@click.argument('new_domain')
 def change_domain(new_domain):
+    if not compose_manager.initiated:
+        click.echo("Please run the 'init' command before running this command.", err=True)
+        exit(1)
     env_manager.update_value('DOMAIN', new_domain)
     env_manager.save()
     click.echo(f"Domain changed to {new_domain}.")
-
     ctx = click.get_current_context()
     ctx.invoke(generate)
 
 
-def postgres_remove_db(name: str) -> bool:
-    if name.lower() == 'live':
-        click.echo("Cannot remove the live database.", err=True)
-        exit(1)
-    try:
-        with connect_postgres() as conn:
-            conn.autocommit = True
-            conn.execute(f"""DROP DATABASE IF EXISTS {name}""")
-        return True
-    except Exception as e:
-        click.echo(f"Failed to remove database {name}: {e}", err=True)
-        raise
-
-
-def dump_db(name: str, destination: str) -> str:
-    path = f'{destination}/{name}_{uuid.uuid4()}.dump'
-
-    result = subprocess.run(['docker', 'compose', 'exec', 'db', 'sh', '-c', f'pg_dump -U postgres -Fc {name} > {path}'],
-                            capture_output=True, text=True)
-
-    result.check_returncode()
-
-    return path
-
-
-def restore_db(db: str, user: str, file_source: str) -> bool:
-    result = subprocess.run(['docker', 'compose', 'exec', 'db', 'sh', '-c',
-                             f'pg_restore --clean --if-exists --no-acl --no-owner -d {db} -U {user} {file_source}'],
-                            capture_output=True, text=True)
-
-    result.check_returncode()
-
-    return True
-
-
-def postgres_add_db(name: str, user: str) -> bool:
-    if name.lower() == 'live':
-        click.echo("Cannot create the live database manually.", err=True)
+@cli.command()
+@click.argument('mode')
+def change_addon_mode(mode):
+    if not compose_manager.initiated:
+        click.echo("Please run the 'init' command before running this command.", err=True)
         exit(1)
 
-    try:
-        with connect_postgres() as conn:
-            conn.autocommit = True
-            conn.execute(f"""CREATE DATABASE {name} OWNER {user}""")
-        return True
-    except Exception as e:
-        click.echo(f"Failed to remove database {name}: {e}", err=True)
-        raise
+    current_mode = env_manager.read_value('MODE', False)
+
+    if current_mode == False:
+        env_manager.add_value('MODE', mode)
+    elif current_mode == mode:
+        click.echo(f"Mode is already {mode}.")
+        exit(1)
+    else:
+        env_manager.update_value('MODE', mode)
+
+    env_manager.save()
+    click.echo(f"Mode changed to {mode}.")
+
+    ctx = click.get_current_context()
+    ctx.invoke(generate)
+
+    compose_manager.up()
 
 
 def remove_file_in_container(container_name: str, path: str, recursive: bool = False) -> bool:
@@ -463,8 +448,9 @@ def escape_db(name: str) -> bool:
         exit(1)
 
     escape_statements = {'fetchmail_server': 'DELETE FROM fetchmail_server;',
-        'ir_mail_server': 'DELETE FROM ir_mail_server;', 'ir_cron': 'UPDATE ir_cron SET active = FALSE;',
-        'ir_config_parameter': f"UPDATE ir_config_parameter SET value = '{uuid.uuid4()}' WHERE key = 'database.uuid';"}
+                         'ir_mail_server': 'DELETE FROM ir_mail_server;',
+                         'ir_cron': 'UPDATE ir_cron SET active = FALSE;',
+                         'ir_config_parameter': f"UPDATE ir_config_parameter SET value = '{uuid.uuid4()}' WHERE key = 'database.uuid';"}
 
     def table_exists(conn, table_name):
         query = f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '{table_name}');"
@@ -485,57 +471,74 @@ def escape_db(name: str) -> bool:
         raise
 
 
-@cli.command()
-@click.argument('enviroment')
+def require_initiated(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not compose_manager.initiated:
+            click.echo("Please run the 'init' command before running this command.", err=True)
+            exit(1)
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def prevent_on_enviroment(disallowed_env):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if args[0] == disallowed_env:
+                click.echo(f"You cannot run this command on the {disallowed_env} enviroment.", err=True)
+                exit(1)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def require_database(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            if get_service_health('db') != 'healthy':
+                click.echo("The database service is not healthy.", err=True)
+                exit(1)
+        except docker.errors.NotFound:
+            click.echo("The database service is not running.", err=True)
+            exit(1)
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+@require_initiated
+@require_database
+@prevent_on_enviroment('live')
 def refresh_enviroment(enviroment):
-    if not compose_manager.initiated:
-        click.echo("Please run the 'init' command before running this command.", err=True)
-        exit(1)
-
-    if enviroment == 'live':
-        click.echo("Cannot refresh the live environment.", err=True)
-        exit(1)
-
-    if get_service_health('db') != 'healthy':
-        click.echo("The database service is not healthy.", err=True)
-        exit(1)
-
-    if enviroment not in ['live', 'pre']:
+    if enviroment != 'pre':
         # Check if the environment exists
         if enviroment not in compose_manager.services.keys() or not enviroment.startswith('odoo'):
             click.echo(f"The environment {enviroment} does not exist or isn't an odoo env.", err=True)
             exit(1)
-
     click.echo(f"Refreshing {enviroment} environment")
-
     click.echo("* Stopping environment")
     compose_manager.stop([enviroment])
-
     click.echo("* Removing old database")
-    postgres_remove_db(enviroment)
-
+    DatabaseManager(enviroment, 'postgres').drop_db()
     click.echo("* Copy new database")
-    path = dump_db('live', '/tmp')
-
+    path = DatabaseManager('live', 'postgres').dump_db('/tmp')
     click.echo('* Restore dump')
-    postgres_add_db(enviroment, enviroment)
-    restore_db(enviroment, enviroment, path)
-
+    DatabaseManager.from_dump(enviroment, enviroment, path)
     click.echo('* Remove dump')
     remove_file_in_container('db', path)
-
     click.echo('* Copy Filestore')
     enviroment_folder_path = f'volumes/{enviroment}/filestore/pre'
     live_folder_path = 'volumes/live/filestore/live'
-
     if os.path.exists(enviroment_folder_path):
         shutil.rmtree(enviroment_folder_path)
-
     shutil.copytree(live_folder_path, enviroment_folder_path)
-
     click.echo('* Escape new DB')
     escape_db(enviroment)
-
     click.echo("* Starting environment")
     compose_manager.up([enviroment])
 
