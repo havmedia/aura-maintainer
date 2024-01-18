@@ -24,3 +24,15 @@ class EnvVarAlreadyExistsException(EnvException):
 
 class EnvVarDoesNotExistException(EnvException):
     pass
+
+
+class DatabaseException(Exception):
+    pass
+
+
+class OperationOnDatabaseDeniedException(DatabaseException):
+    pass
+
+
+class DatabaseAlreadyExistsException(DatabaseException):
+    pass
