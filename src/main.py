@@ -195,8 +195,9 @@ def init(dev, domain, version):
     ctx = click.get_current_context()
     ctx.invoke(generate)
     compose_manager.up(['db'])
-    postgres_add_user('live', live_db_password)
-    postgres_add_user('pre', pre_db_password)
+
+    DatabaseManager(DEFAULT_DB, DB_USER, master_db_password).add_user('live', live_db_password)
+    DatabaseManager(DEFAULT_DB, DB_USER, master_db_password).add_user('pre', pre_db_password)
     compose_manager.up()
 
 
@@ -309,7 +310,8 @@ def add(pr_number):
 
     db_password = generate_password()
 
-    postgres_add_user(service_name, db_password)
+    DatabaseManager(DEFAULT_DB, DB_USER, env_manager.read_value('MASTER_DB_PASSWORD')).add_user(service_name,
+                                                                                                db_password)
 
     compose_manager.save()
     env_manager.add_value(f'{service_name}_DB_PASSWORD', db_password)
@@ -333,41 +335,10 @@ def remove(pr_number):
         exit(1)
 
     compose_manager.save()
-    postgres_remove_user(service_name)
+    DatabaseManager(DEFAULT_DB, DB_USER, env_manager.read_value('MASTER_DB_PASSWORD')).remove_user(service_name)
     env_manager.remove_value(f'{service_name}_DB_PASSWORD')
     env_manager.save()
     click.echo(f"Development environment for PR{pr_number} removed successfully.")
-
-
-def postgres_add_user(name: str, password: str) -> bool:
-    try:
-        with connect_postgres() as conn:
-            conn.autocommit = True
-            conn.execute(f"""CREATE ROLE {name} LOGIN CREATEDB PASSWORD \'{password}\'""")
-        return True
-    except Exception as e:
-        click.echo(f"Failed to add user {name}: {e}", err=True)
-        raise
-
-
-def postgres_remove_user(name: str) -> bool:
-    try:
-        with connect_postgres() as conn:
-            conn.autocommit = True
-            conn.execute(f"""DROP ROLE IF EXISTS {name}""")
-        return True
-    except Exception as e:
-        click.echo(f"Failed to remove user {name}: {e}", err=True)
-        raise
-
-
-def connect_postgres(db: str = None):
-    ensure_services_healthy(['db'])
-
-    db = db or DEFAULT_DB
-
-    db_password = env_manager.read_value('MASTER_DB_PASSWORD')
-    return psycopg.connect(f"host=127.0.0.1 port={DB_PORT} dbname={db} user={DB_USER} password={db_password}")
 
 
 @manage_dev_env.command()
@@ -452,19 +423,19 @@ def escape_db(name: str) -> bool:
                          'ir_cron': 'UPDATE ir_cron SET active = FALSE;',
                          'ir_config_parameter': f"UPDATE ir_config_parameter SET value = '{uuid.uuid4()}' WHERE key = 'database.uuid';"}
 
-    def table_exists(conn, table_name):
+    main_database_manager = DatabaseManager(DEFAULT_DB, DB_USER, env_manager.read_value('MASTER_DB_PASSWORD'))
+
+    def table_exists(table_name):
         query = f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '{table_name}');"
-        cur = conn.execute(query)
+        cur = main_database_manager._run_sql_command(query, True)
         return cur.fetchone()[0]
 
     try:
-        with connect_postgres(name) as conn:
-            conn.autocommit = True
-            for table, escape_statement in escape_statements.items():
-                if not table_exists(conn, table):
-                    click.echo(f"Table {table} does not exist. Skipping...", err=True)
-                    continue
-                conn.execute(escape_statement)
+        for table, escape_statement in escape_statements.items():
+            if not table_exists(table):
+                click.echo(f"Table {table} does not exist. Skipping...", err=True)
+                continue
+            main_database_manager._run_sql_command(escape_statement, True)
         return True
     except Exception as e:
         click.echo(f"Failed to escape database {name}: {e}", err=True)
