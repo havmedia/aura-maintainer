@@ -192,8 +192,7 @@ def init(dev, domain, version):
     env_manager.save()
     click.echo('Setup initialized successfully.')
     # Run generate command
-    ctx = click.get_current_context()
-    ctx.invoke(generate)
+    generate()
     compose_manager.up(['db'])
 
     DatabaseManager(DEFAULT_DB, DB_USER, master_db_password).add_user('live', live_db_password)
@@ -241,7 +240,7 @@ def ensure_services_healthy(service_names):
             time.sleep(5)
 
 
-def generate(dashboard):
+def generate(dashboard=False):
     if not env_manager.initiated:
         click.echo("Please run the 'init' command before generating the configuration.", err=True)
         exit(1)
