@@ -7,6 +7,7 @@ from src.errors import OperationOnDatabaseDeniedException, DatabaseAlreadyExists
 
 DB_PORT = 5432
 
+
 class DatabaseManager:
     def __init__(self, name: str, user: str, password: str, port: str = DB_PORT):
         self.name = name
@@ -15,9 +16,16 @@ class DatabaseManager:
         self.password = password
         self.port = port
 
-    def connect(self):
+    def _connect(self):
         return psycopg.connect(
             f"host=127.0.0.1 port={self.port} dbname={self.name} user={self.user} password={self.password}")
+
+    def _run_sql_command(self, sql: str, autocommit: bool = False):
+        with self._connect() as conn:
+            conn.autocommit = autocommit
+            cursor = conn.execute(sql.encode())
+            conn.commit()
+        return cursor
 
     def dump_db(self, destination_path: str) -> str:
         path = f'{destination_path}/{self.name}_{uuid.uuid4()}.dump'
@@ -84,3 +92,9 @@ class DatabaseManager:
         result.check_returncode()
 
         return True
+
+    def add_user(self, name: str, password: str):
+        self._run_sql_command(f"""CREATE ROLE {name} LOGIN CREATEDB PASSWORD \'{password}\'""", True)
+
+    def remove_user(self, name: str):
+        self._run_sql_command(f"""DROP ROLE IF EXISTS {name}""", True)

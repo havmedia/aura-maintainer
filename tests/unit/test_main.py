@@ -3,7 +3,7 @@ import subprocess
 import unittest
 from unittest.mock import patch, MagicMock
 
-from src.main import get_local_ip, check_domain_and_subdomain, get_docker_versions, cli, connect_postgres, \
+from src.main import get_local_ip, check_domain_and_subdomain, get_docker_versions, cli, \
     generate_password, change_domain, remove_file_in_container, escape_db, require_initiated, prevent_on_enviroment, require_database, change_domain_command
 
 from click.testing import CliRunner
@@ -125,21 +125,6 @@ class TestMain(unittest.TestCase):
         result = self.runner.invoke(cli)
         mock_echo.assert_not_called()
         self.assertEqual(result.exit_code, 0)
-
-    @patch('src.main.env_manager.read_value')
-    @patch('src.main.ensure_services_healthy')
-    @patch('psycopg.connect')
-    def test_connect_postgres_successful_connection(self, mock_connect, mock_healthy, mock_read_env):
-        mock_read_env.return_value = 'dummy_password'
-        mock_healthy.return_value = True
-        mock_connect.return_value = MagicMock()
-
-        connect_postgres()
-
-        mock_healthy.assert_called_once_with(['db'])
-        mock_read_env.assert_called_once_with('MASTER_DB_PASSWORD')
-        mock_connect.assert_called_once_with(
-            "host=127.0.0.1 port=5432 dbname=postgres user=postgres password=dummy_password")
 
 
 class TestGeneratePassword(unittest.TestCase):

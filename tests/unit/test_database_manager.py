@@ -201,3 +201,61 @@ class TestDbCreate(unittest.TestCase):
 
         with self.assertRaises(subprocess.CalledProcessError):
             self.db_manager.create()
+
+
+class TestDbConnect(unittest.TestCase):
+    def setUp(self):
+        self.db_name = 'test_db'
+        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'passwordd')
+
+    @patch('src.main.psycopg.connect')
+    def test_connect_with_valid_credentials(self, mock_connect):
+        mock_connect.return_value = MagicMock()
+
+        self.db_manager._connect()
+
+        mock_connect.assert_called_once()
+
+
+class TestDbRunSql(unittest.TestCase):
+    def setUp(self):
+        self.db_name = 'test_db'
+        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'passwordd')
+
+    @patch('src.DatabaseManager.DatabaseManager._connect')
+    def test_execute_sql(self, mock_connect):
+        mock_connect.return_value = MagicMock()
+
+        self.db_manager._run_sql_command('SELECT * FROM sale_order;')
+
+        mock_connect.assert_called_once()
+
+
+class TestAddUser(unittest.TestCase):
+    def setUp(self):
+        self.db_name = 'test_db'
+        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'passwordd')
+
+    @patch('src.DatabaseManager.DatabaseManager._run_sql_command')
+    def test_add_user(self, mock_run_sql_command):
+        mock_run_sql_command.return_value = MagicMock()
+
+        self.db_manager.add_user('test_user', 'password-test-user')
+
+        mock_run_sql_command.assert_called_once_with(
+            """CREATE ROLE test_user LOGIN CREATEDB PASSWORD 'password-test-user'""", True)
+
+
+class TestRemoveUser(unittest.TestCase):
+    def setUp(self):
+        self.db_name = 'test_db'
+        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'passwordd')
+
+    @patch('src.DatabaseManager.DatabaseManager._run_sql_command')
+    def test_remove_user(self, mock_run_sql_command):
+        mock_run_sql_command.return_value = MagicMock()
+
+        self.db_manager.remove_user('test-user')
+
+        mock_run_sql_command.assert_called_once_with(
+            """DROP ROLE IF EXISTS test-user""", True)
