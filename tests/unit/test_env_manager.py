@@ -16,7 +16,6 @@ class TestEnvManager(unittest.TestCase):
     @patch('os.path.exists', return_value=True)
     def test_load_env_data(self, mock_file, mock_exists):
         manager = EnvManager()
-        print(manager.env_data)
         self.assertIn('TEST_KEY', manager.env_data)
         self.assertEqual(manager.env_data['TEST_KEY'], 'TEST_VALUE')
         self.assertTrue(manager.initiated)
@@ -69,5 +68,4 @@ class TestEnvManager(unittest.TestCase):
         manager = EnvManager()
         manager.env_data = {'TEST_KEY': 'TEST_VALUE', 'ANOTHER_KEY': 'ANOTHER_VALUE'}
         manager.save()
-        print(mock_file().writelines.call_args_list)
         mock_file().writelines.assert_any_call(['TEST_KEY=TEST_VALUE\n', 'ANOTHER_KEY=ANOTHER_VALUE\n'])
