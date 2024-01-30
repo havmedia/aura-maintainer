@@ -195,6 +195,8 @@ def init(dev, domain, version):
     generate()
     compose_manager.up(['db'])
 
+    time.sleep(5)
+
     DatabaseManager(DEFAULT_DB, DB_USER, master_db_password).add_user('live', live_db_password)
     DatabaseManager(DEFAULT_DB, DB_USER, master_db_password).add_user('pre', pre_db_password)
     compose_manager.up()
