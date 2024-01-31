@@ -1,9 +1,9 @@
-import unittest
 from unittest.mock import patch, mock_open
+
+import pytest
 
 from src.EnvManager import EnvManager
 from src.errors import EnvVarAlreadyExistsException, EnvVarDoesNotExistException
-import pytest
 
 READ_DATA = "TEST_KEY=TEST_VALUE\nANOTHER_KEY=ANOTHER_VALUE"
 

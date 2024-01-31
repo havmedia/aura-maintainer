@@ -1,6 +1,5 @@
 import socket
 import subprocess
-import unittest
 from unittest.mock import patch, MagicMock
 
 import pytest

@@ -1,10 +1,11 @@
 import subprocess
-import unittest
 from unittest.mock import patch, mock_open, MagicMock
+
+import pytest
+
 from src.ComposeManager import ComposeManager
 from src.Services import ComposeService
 from src.errors import ServiceAlreadyExistsException, ServiceDoesNotExistException
-import pytest
 
 MOCK_FILE = 'version: \'3.8\'\nservices:\n  test_service:\n    image: \'test_image\''
 

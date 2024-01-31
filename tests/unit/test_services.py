@@ -1,5 +1,3 @@
-import unittest
-
 from src.Services import ComposeService, ProxyComposeService, PostgresComposeService, KwkhtmltopdfComposeService, \
     IMAGE_KWKHTMLTOPDF, POSTGRES_DB, OdooComposeService
 

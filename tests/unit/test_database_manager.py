@@ -1,10 +1,11 @@
 import subprocess
-import unittest
-from unittest.mock import patch, MagicMock
 import uuid
+from unittest.mock import patch, MagicMock
+
+import pytest
+
 from src.DatabaseManager import DatabaseManager
 from src.errors import DatabaseAlreadyExistsException
-import pytest
 
 
 @pytest.fixture
