@@ -184,6 +184,7 @@ def init(dev, domain, version):
     pre_db_password = generate_password()
     # Save data to .env file
     env_manager.add_value('DEV', '1' if dev else '0')
+    env_manager.add_value('MODULE_MODE', 'included')
     env_manager.add_value('DOMAIN', domain)
     env_manager.add_value('VERSION', version)
     env_manager.add_value('MASTER_DB_PASSWORD', master_db_password)
@@ -249,13 +250,16 @@ def generate(dashboard=False):
     domain = env_manager.read_value('DOMAIN')
     version = env_manager.read_value('VERSION')
     is_dev = True if env_manager.read_value('DEV') == '1' else False
+    module_mode = env_manager.read_value('MODULE_MODE') if env_manager.read_value('MODULE_MODE') else 'included'
     # Store domain in the proxy service for later reference
     proxy_service = ProxyComposeService(name='proxy', domain=domain, dashboard=dashboard, https=not is_dev)
     live_service = OdooComposeService(name='live', domain=domain, db_password='${LIVE_DB_PASSWORD}',
                                       admin_passwd=generate_password(), odoo_version=version, basic_auth=False,
-                                      https=not is_dev)  # Generate a random password each time because it will never be needed
+                                      https=not is_dev,
+                                      module_mode=module_mode)  # Generate a random password each time because it will never be needed
     pre_service = OdooComposeService(name='pre', domain=f'pre.{domain}', db_password='${PRE_DB_PASSWORD}',
-                                     admin_passwd=generate_password(), odoo_version=version, https=not is_dev)
+                                     admin_passwd=generate_password(), odoo_version=version, https=not is_dev,
+                                     module_mode=module_mode)
     db_service = PostgresComposeService(name='db')
     kwkhtmltopdf_service = KwkhtmltopdfComposeService(name='kwkhtmltopdf')
     # Update services
@@ -297,11 +301,12 @@ def add(pr_number):
     domain = env_manager.read_value('DOMAIN')
     version = env_manager.read_value('VERSION')
     is_dev = True if env_manager.read_value('DEV') == '1' else False
+    module_mode = env_manager.read_value('MODULE_MODE') if env_manager.read_value('MODULE_MODE') else 'included'
     service_name = f'odoo_dev_pr{pr_number}'
 
     dev_service = OdooComposeService(name=service_name, domain=f'pr{pr_number}.{domain}',
                                      db_password=f'{service_name}_DB_PASSWORD', admin_passwd=generate_password(),
-                                     odoo_version=version, https=not is_dev)
+                                     odoo_version=version, https=not is_dev, module_mode=module_mode)
 
     try:
         compose_manager.add_service(dev_service)
@@ -375,24 +380,30 @@ def change_domain(new_domain):
 
 
 @cli.command()
-@click.argument('mode')
-def change_addon_mode(mode):
+def mount_modules():
     if not compose_manager.initiated:
         click.echo("Please run the 'init' command before running this command.", err=True)
         exit(1)
 
-    current_mode = env_manager.read_value('MODE', False)
+    current_mode = env_manager.read_value('MODULE_MODE', 'included')
 
-    if current_mode == False:
-        env_manager.add_value('MODE', mode)
-    elif current_mode == mode:
-        click.echo(f"Mode is already {mode}.")
+    if current_mode == 'mounted':
+        click.echo("Modules already mounted")
         exit(1)
-    else:
-        env_manager.update_value('MODE', mode)
+
+    if current_mode is None:
+        env_manager.add_value('MODE', 'mounted')
 
     env_manager.save()
-    click.echo(f"Mode changed to {mode}.")
+
+    # Copy files for each container
+    copy_files_from_container('live', '/odoo/src/', './volumes/live/src')
+    copy_files_from_container('pre', '/odoo/src/', './volumes/pre/src')
+
+    for service_name in [key for key in compose_manager.services.keys() if key.startswith("odoo_dev")]:
+        copy_files_from_container('service_name', '/odoo/src/', f'./volumes/{service_name}/src')
+
+    click.echo("Mounted modules.")
 
     ctx = click.get_current_context()
     ctx.invoke(generate)
@@ -407,6 +418,15 @@ def remove_file_in_container(container_name: str, path: str, recursive: bool = F
         rm_command += ' -r'
 
     result = subprocess.run(['docker', 'compose', 'exec', container_name, 'sh', '-c', f'{rm_command} {path}'],
+                            capture_output=True, text=True)
+
+    result.check_returncode()
+
+    return True
+
+
+def copy_files_from_container(service_name: str, src_path: str, dest_path: str) -> bool:
+    result = subprocess.run(['docker', 'compose', 'cp', f'{service_name}:{src_path}', dest_path],
                             capture_output=True, text=True)
 
     result.check_returncode()

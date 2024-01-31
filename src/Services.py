@@ -86,7 +86,7 @@ class ProxyComposeService(ComposeService):
 
 class OdooComposeService(ComposeService):
     def __init__(self, name: str, domain: str, db_password: str, admin_passwd: str, odoo_version: str,
-                 basic_auth: bool = True, https: bool = True, **kwargs):
+                 basic_auth: bool = True, https: bool = True, module_mode: str = 'included', **kwargs):
         config = {
             'name': name,
             'image': f'{IMAGE_ODOO}:{odoo_version}',
@@ -119,7 +119,7 @@ class OdooComposeService(ComposeService):
                 'kwkhtmltopdf'
             ],
             'volumes': [
-                f'./volumes/{name}:/data/odoo/'
+                f'./volumes/{name}:/data/odoo/',
             ]
         }
 
@@ -127,6 +127,11 @@ class OdooComposeService(ComposeService):
             config['labels'] += [
                 f'traefik.http.routers.{name}-websocket.tls.certresolver=main_resolver',
                 f'traefik.http.routers.{name}.tls.certresolver=main_resolver',
+            ]
+
+        if module_mode == 'mounted':
+            config['volumes'] += [
+                f'./volumes/{name}/src:/odoo/src/'
             ]
 
         if basic_auth:
