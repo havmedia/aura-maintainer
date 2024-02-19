@@ -199,7 +199,7 @@ class TestDbCreate:
 
 class TestDbConnect:
 
-    @patch('src.main.psycopg.connect')
+    @patch('src.DatabaseManager.psycopg.connect')
     def test_connect_with_valid_credentials(self, mock_connect, db_manager):
         mock_connect.return_value = MagicMock()
 

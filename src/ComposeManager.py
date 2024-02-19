@@ -54,7 +54,8 @@ class ComposeManager:
             raise ServiceDoesNotExistException(f'The service {service_name} does not exist.')
         del self.services[service_name]
 
-    def up(self, services: Union[bool, list] = False):
+    @staticmethod
+    def up(services: Union[bool, list] = False):
         if services:
             # Only start the services specified
             command = ['docker', 'compose', 'up', '-d'] + list(services)
@@ -70,7 +71,8 @@ class ComposeManager:
             click.echo(f"Failed to start services: {e}", err=True)
             raise
 
-    def stop(self, services: Union[bool, list] = False):
+    @staticmethod
+    def stop(services: Union[bool, list] = False):
         if services:
             # Only sop the services specified
             command = ['docker', 'compose', 'stop'] + list(services)
