@@ -7,6 +7,7 @@ import pytest
 from click.testing import CliRunner
 from docker.errors import DockerException
 
+from src import helper
 from src.main import cli
 from src.helper import get_local_ip, check_domain_and_subdomain, get_docker_versions, generate_password, \
     remove_file_in_container
@@ -244,9 +245,8 @@ class TestDecorators:
         assert cm.value.code == 1
 
     # Test for check_database_health decorator
-    @patch('src.main.get_service_health')
-    def test_require_database(self, mock_get_service_health):
-        mock_get_service_health.return_value = 'unhealthy'
+    def test_require_database(self, monkeypatch):
+        monkeypatch.setattr('src.helper.get_service_health', lambda _: 'unhealthy')
 
         @require_database
         def dummy_function():

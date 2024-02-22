@@ -1,6 +1,6 @@
 import subprocess
 import uuid
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, call
 
 import pytest
 
@@ -145,46 +145,48 @@ class TestDbExists:
 
 class TestDbCreate:
 
-    @patch('subprocess.run')
-    @patch('src.main.DatabaseManager.db_exists')
-    def test_create_db(self, mock_db_exists, mock_run, db_manager, db_name):
-        # Mock subprocess
-        mock_run.return_value = MagicMock(returncode=1)
-        mock_db_exists.return_value = False
+    def test_create_db(self, db_manager, db_name, monkeypatch):
+        subprocess_mock = MagicMock(returncode=False)
+        monkeypatch.setattr('subprocess.run', subprocess_mock)
 
         db_manager.exists = False
 
         assert db_manager.create()
 
-        mock_run.assert_called_once()
-        mock_db_exists.assert_called_once()
+        subprocess_mock.assert_has_calls([
+            call(['docker', 'compose', 'exec', 'db', 'sh', '-c', 'psql -lqt | cut -d \\| -f 1 | grep -qw test_db'],
+                 capture_output=True, text=True),
+            call(['docker', 'compose', 'exec', 'db', 'sh', '-c', 'createdb -U postgres test_db'], capture_output=True,
+                 text=True),
+        ], any_order=True)
 
-    @patch('subprocess.run')
-    def test_create_db_already_exists(self, mock_run, db_manager, db_name):
+    def test_create_db_already_exists(self, monkeypatch, db_manager, db_name):
         # Mock subprocess
-        mock_run.return_value = MagicMock(returncode=0)
+        subprocess_mock = MagicMock(returncode=False)
+        monkeypatch.setattr('subprocess.run', subprocess_mock)
 
         db_manager.exists = True
 
         with pytest.raises(DatabaseAlreadyExistsException):
             db_manager.create()
 
-        mock_run.assert_not_called()
+        subprocess_mock.assert_not_called()
 
-    @patch('subprocess.run')
-    @patch('src.main.DatabaseManager.db_exists')
-    def test_create_db_already_exists_recognized_on_call(self, mock_db_exists, mock_run, db_manager):
+    def test_create_db_already_exists_recognized_on_call(self, monkeypatch, db_manager):
         # Mock subprocess
-        mock_run.return_value = MagicMock(returncode=1)
-        mock_db_exists.return_value = MagicMock(return_value=False)
+        subprocess_mock = MagicMock(returncode=1)
+        monkeypatch.setattr('subprocess.run', subprocess_mock)
+
+        db_exist_mock = MagicMock(return_value=True)
+        monkeypatch.setattr('src.DatabaseManager.DatabaseManager.db_exists', db_exist_mock)
 
         db_manager.exists = False
 
         with pytest.raises(DatabaseAlreadyExistsException):
             db_manager.create()
 
-        mock_run.assert_not_called()
-        mock_db_exists.assert_called_once()
+        subprocess_mock.assert_not_called()
+        db_exist_mock.assert_called_once()
 
     @patch('subprocess.run')
     def test_create_db_error(self, mock_run, db_manager):

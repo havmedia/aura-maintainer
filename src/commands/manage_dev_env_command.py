@@ -4,10 +4,10 @@ from src.DatabaseManager import DatabaseManager
 from src.Services import OdooComposeService
 from src.errors import ServiceAlreadyExistsException, ServiceDoesNotExistException
 from src.helper import generate_password, copy_files_from_container
-from src.main import cli, DEFAULT_DB, DB_USER
+from src.constants import DB_USER, DEFAULT_DB
 
 
-@cli.group()
+@click.group()
 def manage_dev_env():
     pass
 

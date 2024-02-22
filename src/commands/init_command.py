@@ -5,11 +5,12 @@ import click
 from src.DatabaseManager import DatabaseManager
 from src.helper import check_domain_and_subdomain, generate_password
 
-from src.main import cli, DOMAIN_NOT_CONFIGURED_ERROR_CODE, DEFAULT_DB, DB_USER
+from src.constants import DB_USER, DEFAULT_DB
+from src.error_codes import DOMAIN_NOT_CONFIGURED_ERROR_CODE
 from src.commands.generate_command import generate
 
 
-@cli.command('init')
+@click.command('init')
 @click.argument('domain')
 @click.argument('version')
 @click.option('--dev', '-d', is_flag=True, help='Enable development mode. No https and other dev related things')

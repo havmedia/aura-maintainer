@@ -5,11 +5,10 @@ from src.EnvManager import EnvManager
 from src.decorators import require_initiated
 from src.helper import copy_files_from_container
 
-from src.main import cli
 from src.commands.generate_command import generate
 
 
-@cli.command('mount-modules')
+@click.command('mount-modules')
 @click.pass_context
 def command_mount_modules(ctx):
     mount_modules(compose_manager=ctx.obj['compose_manager'], env_manager=ctx.obj['env_manager'])

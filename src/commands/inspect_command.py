@@ -4,10 +4,9 @@ import click
 import docker
 
 from src.helper import get_docker_versions, check_domain_and_subdomain, get_service_health
-from src.main import cli
 
 
-@cli.command('inspect')
+@click.command('inspect')
 @click.option('--json', 'return_json', is_flag=True, help='Output the data in JSON format', )
 @click.pass_context
 def inspect_command(ctx, return_json):

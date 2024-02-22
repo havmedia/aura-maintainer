@@ -9,10 +9,10 @@ from src.EnvManager import EnvManager
 from src.decorators import require_initiated, require_database, prevent_on_enviroment
 from src.helper import remove_file_in_container
 
-from src.main import cli, DEFAULT_DB, DB_USER
+from src.constants import DB_USER, DEFAULT_DB
 
 
-@cli.command('refresh-enviroment')
+@click.command('refresh-enviroment')
 @click.argument('enviroment')
 @click.pass_context
 def refresh_enviroment_cli(ctx, enviroment):

@@ -3,10 +3,8 @@ import click
 from src.Services import ProxyComposeService, OdooComposeService, PostgresComposeService, KwkhtmltopdfComposeService
 from src.helper import generate_password
 
-from src.main import cli
 
-
-@cli.command('generate')
+@click.command('generate')
 @click.option('--dashboard', is_flag=True,
               help='Enable dashboard for the proxy service. Please use this only for debug purposes.')
 @click.pass_context
