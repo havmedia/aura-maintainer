@@ -1,7 +1,8 @@
 import subprocess
 import uuid
-import psycopg
 from typing import Self
+
+import psycopg
 
 from src.errors import OperationOnDatabaseDeniedException, DatabaseAlreadyExistsException
 

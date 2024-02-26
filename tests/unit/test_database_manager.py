@@ -1,48 +1,51 @@
 import subprocess
-import unittest
-from unittest.mock import patch, MagicMock
 import uuid
+from unittest.mock import patch, MagicMock, call
+
+import pytest
+
 from src.DatabaseManager import DatabaseManager
 from src.errors import DatabaseAlreadyExistsException
 
 
-class TestDump(unittest.TestCase):
+@pytest.fixture
+def db_name():
+    return 'test_db'
 
-    def setUp(self):
-        self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'password')
+
+@pytest.fixture
+def db_manager(db_name):
+    return DatabaseManager(db_name, 'postgres', 'password')
+
+
+class TestDump:
 
     @patch('uuid.uuid4')
     @patch('subprocess.run')
-    def test_dump_db(self, mock_run, mock_uuid):
+    def test_dump_db(self, mock_run, mock_uuid, db_manager, db_name):
         # Mock UUID and subprocess
-
         test_uuid = uuid.UUID('1234567890abcdef1234567890abcdef')
         mock_uuid.return_value = test_uuid
         mock_run.return_value = MagicMock(returncode=0)
 
-        expected_path = f'/destination_path/{self.db_name}_{test_uuid}.dump'
-        path = self.db_manager.dump_db('/destination_path')
+        expected_path = f'/destination_path/{db_name}_{test_uuid}.dump'
+        path = db_manager.dump_db('/destination_path')
 
         mock_run.assert_called_once()
-        self.assertEqual(path, expected_path)
+        assert path == expected_path
 
     @patch('subprocess.run')
-    def test_dump_db_error(self, mock_run):
+    def test_dump_db_error(self, mock_run, db_manager, db_name):
         # Mock subprocess to simulate an error
         mock_run.side_effect = subprocess.CalledProcessError(1,
                                                              ['docker', 'compose', 'exec', 'db', 'sh', '-c', 'pg_dump'],
                                                              stderr='Error')
 
-        with self.assertRaises(subprocess.CalledProcessError):
-            self.db_manager.dump_db('/destination_path')
+        with pytest.raises(subprocess.CalledProcessError):
+            db_manager.dump_db('/destination_path')
 
 
-class TestFromDump(unittest.TestCase):
-    def setUp(self):
-        self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'password')
-
+class TestFromDump:
     @patch('subprocess.run')
     def test_from_dump(self, mock_run):
         # Mock subprocess
@@ -51,15 +54,15 @@ class TestFromDump(unittest.TestCase):
         new_db_manager = DatabaseManager.from_dump('new_db', 'user', 'password', '/path/to/dump')
 
         mock_run.assert_called()
-        self.assertIsInstance(new_db_manager, DatabaseManager)
-        self.assertEqual(new_db_manager.name, 'new_db')
+        assert isinstance(new_db_manager, DatabaseManager)
+        assert new_db_manager.name == 'new_db'
 
     @patch('subprocess.run')
     def test_from_dump_already_exists(self, mock_run):
         # Mock subprocess
         mock_run.return_value = MagicMock(returncode=0)
 
-        with self.assertRaises(DatabaseAlreadyExistsException):
+        with pytest.raises(DatabaseAlreadyExistsException):
             DatabaseManager.from_dump('new_db', 'user', 'password', '/path/to/dump')
 
         mock_run.assert_called_once()
@@ -71,191 +74,171 @@ class TestFromDump(unittest.TestCase):
                                                              ['docker', 'compose', 'exec', 'db', 'sh', '-c', 'pg_dump'],
                                                              stderr='Error')
 
-        with self.assertRaises(subprocess.CalledProcessError):
+        with pytest.raises(subprocess.CalledProcessError):
             DatabaseManager.from_dump('new_db', 'user', 'password', '/path/to/dump')
 
 
-class TestDropDb(unittest.TestCase):
-    def setUp(self):
-        self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'password')
+class TestDropDb:
 
     @patch('subprocess.run')
-    def test_drop_db(self, mock_run):
+    def test_drop_db(self, mock_run, db_manager):
         # Mock subprocess
         mock_run.return_value = MagicMock(returncode=0)
 
-        self.assertTrue(self.db_manager.drop_db())
+        assert db_manager.drop_db()
 
         mock_run.assert_called_once()
 
     @patch('subprocess.run')
-    def test_drop_live_db(self, mock_run):
+    def test_drop_live_db(self, mock_run, db_manager):
         # Mock subprocess
         mock_run.return_value = MagicMock(returncode=0)
 
-        self.db_manager.name = 'live'
+        db_manager.name = 'live'
 
-        with self.assertRaises(Exception):
-            self.db_manager.drop_db()
+        with pytest.raises(Exception):
+            db_manager.drop_db()
 
         mock_run.assert_not_called()
 
     @patch('subprocess.run')
-    def test_drop_db_error(self, mock_run):
+    def test_drop_db_error(self, mock_run, db_manager):
         # Mock subprocess to simulate an error
         mock_run.side_effect = subprocess.CalledProcessError(1,
                                                              ['docker', 'compose', 'exec', 'db', 'sh', '-c', 'pg_dump'],
                                                              stderr='Error')
 
-        with self.assertRaises(subprocess.CalledProcessError):
-            self.db_manager.drop_db()
+        with pytest.raises(subprocess.CalledProcessError):
+            db_manager.drop_db()
 
 
-class TestDbExists(unittest.TestCase):
-    def setUp(self):
-        self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'password')
+class TestDbExists:
 
     @patch('subprocess.run')
-    def test_db_exists(self, mock_run):
+    def test_db_exists(self, mock_run, db_manager, db_name):
         # Mock subprocess
         mock_run.return_value = MagicMock(returncode=0)
 
-        self.assertTrue(self.db_manager.db_exists(self.db_name))
+        assert db_manager.db_exists(db_name)
 
         mock_run.assert_called_once()
 
     @patch('subprocess.run')
-    def test_db_does_not_exist(self, mock_run):
+    def test_db_does_not_exist(self, mock_run, db_manager):
         # Mock subprocess
         mock_run.return_value = MagicMock(returncode=1)
 
-        self.assertFalse(self.db_manager.db_exists('new_db'))
+        assert not db_manager.db_exists('new_db')
 
         mock_run.assert_called_once()
 
     @patch('subprocess.run')
-    def test_db_exists_error(self, mock_run):
+    def test_db_exists_error(self, mock_run, db_manager, db_name):
         # Mock subprocess to simulate an error
         mock_run.side_effect = subprocess.CalledProcessError(1,
                                                              ['docker', 'compose', 'exec', 'db', 'sh', '-c', 'pg_dump'],
                                                              stderr='Error')
 
-        with self.assertRaises(subprocess.CalledProcessError):
-            self.db_manager.db_exists(self.db_name)
+        with pytest.raises(subprocess.CalledProcessError):
+            db_manager.db_exists(db_name)
 
 
-class TestDbCreate(unittest.TestCase):
-    def setUp(self):
-        self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'passwordd')
+class TestDbCreate:
 
-    @patch('subprocess.run')
-    @patch('src.main.DatabaseManager.db_exists')
-    def test_create_db(self, mock_db_exists, mock_run):
+    def test_create_db(self, db_manager, db_name, monkeypatch):
+        subprocess_mock = MagicMock(returncode=False)
+        monkeypatch.setattr('subprocess.run', subprocess_mock)
+
+        db_manager.exists = False
+
+        assert db_manager.create()
+
+        subprocess_mock.assert_has_calls([
+            call(['docker', 'compose', 'exec', 'db', 'sh', '-c', 'psql -lqt | cut -d \\| -f 1 | grep -qw test_db'],
+                 capture_output=True, text=True),
+            call(['docker', 'compose', 'exec', 'db', 'sh', '-c', 'createdb -U postgres test_db'], capture_output=True,
+                 text=True),
+        ], any_order=True)
+
+    def test_create_db_already_exists(self, monkeypatch, db_manager, db_name):
         # Mock subprocess
-        mock_run.return_value = MagicMock(returncode=1)
-        mock_db_exists.return_value = False
+        subprocess_mock = MagicMock(returncode=False)
+        monkeypatch.setattr('subprocess.run', subprocess_mock)
 
-        self.db_manager.exists = False
+        db_manager.exists = True
 
-        self.assertTrue(self.db_manager.create())
+        with pytest.raises(DatabaseAlreadyExistsException):
+            db_manager.create()
 
-        mock_run.assert_called_once()
-        mock_db_exists.assert_called_once()
+        subprocess_mock.assert_not_called()
 
-    @patch('subprocess.run')
-    def test_create_db_already_exists(self, mock_run):
+    def test_create_db_already_exists_recognized_on_call(self, monkeypatch, db_manager):
         # Mock subprocess
-        mock_run.return_value = MagicMock(returncode=0)
+        subprocess_mock = MagicMock(returncode=1)
+        monkeypatch.setattr('subprocess.run', subprocess_mock)
 
-        self.db_manager.exists = True
+        db_exist_mock = MagicMock(return_value=True)
+        monkeypatch.setattr('src.DatabaseManager.DatabaseManager.db_exists', db_exist_mock)
 
-        with self.assertRaises(DatabaseAlreadyExistsException):
-            self.db_manager.create()
+        db_manager.exists = False
 
-        mock_run.assert_not_called()
+        with pytest.raises(DatabaseAlreadyExistsException):
+            db_manager.create()
 
-    @patch('subprocess.run')
-    @patch('src.main.DatabaseManager.db_exists')
-    def test_create_db_already_exists_recognized_on_call(self, mock_db_exists, mock_run):
-        # Mock subprocess
-        mock_run.return_value = MagicMock(returncode=1)
-        mock_db_exists.return_value = MagicMock(return_value=False)
-
-        self.db_manager.exists = False
-
-        with self.assertRaises(DatabaseAlreadyExistsException):
-            self.db_manager.create()
-
-        mock_run.assert_not_called()
-        mock_db_exists.assert_called_once()
+        subprocess_mock.assert_not_called()
+        db_exist_mock.assert_called_once()
 
     @patch('subprocess.run')
-    def test_create_db_error(self, mock_run):
+    def test_create_db_error(self, mock_run, db_manager):
         # Mock subprocess to simulate an error
         mock_run.side_effect = subprocess.CalledProcessError(1,
                                                              ['docker', 'compose', 'exec', 'db', 'sh', '-c', 'pg_dump'],
                                                              stderr='Error')
 
-        with self.assertRaises(subprocess.CalledProcessError):
-            self.db_manager.create()
+        with pytest.raises(subprocess.CalledProcessError):
+            db_manager.create()
 
 
-class TestDbConnect(unittest.TestCase):
-    def setUp(self):
-        self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'passwordd')
+class TestDbConnect:
 
-    @patch('src.main.psycopg.connect')
-    def test_connect_with_valid_credentials(self, mock_connect):
+    @patch('src.DatabaseManager.psycopg.connect')
+    def test_connect_with_valid_credentials(self, mock_connect, db_manager):
         mock_connect.return_value = MagicMock()
 
-        self.db_manager._connect()
+        db_manager._connect()
 
         mock_connect.assert_called_once()
 
 
-class TestDbRunSql(unittest.TestCase):
-    def setUp(self):
-        self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'passwordd')
+class TestDbRunSql:
 
     @patch('src.DatabaseManager.DatabaseManager._connect')
-    def test_execute_sql(self, mock_connect):
+    def test_execute_sql(self, mock_connect, db_manager):
         mock_connect.return_value = MagicMock()
 
-        self.db_manager._run_sql_command('SELECT * FROM sale_order;')
+        db_manager._run_sql_command('SELECT * FROM sale_order;')
 
         mock_connect.assert_called_once()
 
 
-class TestAddUser(unittest.TestCase):
-    def setUp(self):
-        self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'passwordd')
-
+class TestAddUser:
     @patch('src.DatabaseManager.DatabaseManager._run_sql_command')
-    def test_add_user(self, mock_run_sql_command):
+    def test_add_user(self, mock_run_sql_command, db_manager):
         mock_run_sql_command.return_value = MagicMock()
 
-        self.db_manager.add_user('test_user', 'password-test-user')
+        db_manager.add_user('test_user', 'password-test-user')
 
         mock_run_sql_command.assert_called_once_with(
             """CREATE ROLE test_user LOGIN CREATEDB PASSWORD 'password-test-user'""", True)
 
 
-class TestRemoveUser(unittest.TestCase):
-    def setUp(self):
-        self.db_name = 'test_db'
-        self.db_manager = DatabaseManager(self.db_name, 'postgres', 'passwordd')
+class TestRemoveUser:
 
     @patch('src.DatabaseManager.DatabaseManager._run_sql_command')
-    def test_remove_user(self, mock_run_sql_command):
+    def test_remove_user(self, mock_run_sql_command, db_manager):
         mock_run_sql_command.return_value = MagicMock()
 
-        self.db_manager.remove_user('test-user')
+        db_manager.remove_user('test-user')
 
         mock_run_sql_command.assert_called_once_with(
             """DROP ROLE IF EXISTS test-user""", True)

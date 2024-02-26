@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python 3.11
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: Install dependencies
@@ -26,6 +26,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Login to registry.hav.media
+        uses: docker/login-action@v3
+        with:
+          registry: registry.hav.media
+          username: ${{ secrets.HAV_REGISTRY_USER }}
+          password: ${{ secrets.HAV_REGISTRY_TOKEN }}
+      - name: Chown user
+        run: |
+          sudo chown -R $USER:$USER $GITHUB_WORKSPACE
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -34,4 +43,4 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with pytest
         run: |
-          pytest
+          python3 -m pytest --basetemp=./test
