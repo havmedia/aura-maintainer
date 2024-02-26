@@ -32,6 +32,9 @@ jobs:
           registry: registry.hav.media
           username: ${{ secrets.HAV_REGISTRY_USER }}
           password: ${{ secrets.HAV_REGISTRY_TOKEN }}
+      - name: Chown user
+        run: |
+          sudo chown -R $USER:$USER $GITHUB_WORKSPACE
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
