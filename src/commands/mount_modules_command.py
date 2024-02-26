@@ -2,10 +2,9 @@ import click
 
 from src.ComposeManager import ComposeManager
 from src.EnvManager import EnvManager
+from src.commands.generate_command import generate
 from src.decorators import require_initiated
 from src.helper import copy_files_from_container
-
-from src.commands.generate_command import generate
 
 
 @click.command('mount-modules')

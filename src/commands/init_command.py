@@ -3,11 +3,10 @@ import time
 import click
 
 from src.DatabaseManager import DatabaseManager
-from src.helper import check_domain_and_subdomain, generate_password
-
+from src.commands.generate_command import generate
 from src.constants import DB_USER, DEFAULT_DB
 from src.error_codes import DOMAIN_NOT_CONFIGURED_ERROR_CODE
-from src.commands.generate_command import generate
+from src.helper import check_domain_and_subdomain, generate_password
 
 
 @click.command('init')

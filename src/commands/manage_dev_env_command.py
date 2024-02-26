@@ -2,9 +2,9 @@ import click
 
 from src.DatabaseManager import DatabaseManager
 from src.Services import OdooComposeService
+from src.constants import DB_USER, DEFAULT_DB
 from src.errors import ServiceAlreadyExistsException, ServiceDoesNotExistException
 from src.helper import generate_password, copy_files_from_container
-from src.constants import DB_USER, DEFAULT_DB
 
 
 @click.group()

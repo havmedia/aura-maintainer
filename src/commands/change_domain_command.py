@@ -1,10 +1,9 @@
 import click
 
-from src.decorators import require_initiated
-from src.helper import check_domain_and_subdomain
-
-from src.error_codes import DOMAIN_NOT_CONFIGURED_ERROR_CODE
 from src.commands.generate_command import generate
+from src.decorators import require_initiated
+from src.error_codes import DOMAIN_NOT_CONFIGURED_ERROR_CODE
+from src.helper import check_domain_and_subdomain
 
 
 @click.command('change-domain')

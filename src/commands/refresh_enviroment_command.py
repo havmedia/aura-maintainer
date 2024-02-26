@@ -6,10 +6,9 @@ import click
 
 from src.DatabaseManager import DatabaseManager
 from src.EnvManager import EnvManager
+from src.constants import DB_USER, DEFAULT_DB
 from src.decorators import require_initiated, require_database, prevent_on_enviroment
 from src.helper import remove_file_in_container
-
-from src.constants import DB_USER, DEFAULT_DB
 
 
 @click.command('refresh-enviroment')
