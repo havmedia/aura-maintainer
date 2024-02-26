@@ -45,8 +45,10 @@ This repo contains the python Setup Maintainer for odoo setups. It is used to se
 
 The init command is used to initialize the setup maintainer. It will create a new setup maintainer project in the current directory.
 
+You can provide the option `--dev` to run without ssh and reduced checks.
+You can provide the option `--disable-domain-check` to disable the domain check.
 ```sh
-python aura-maintainer init DOMAIN VERSION
+aura-maintainer init DOMAIN VERSION
 ```
 
 ### Generate
@@ -56,7 +58,7 @@ The generate command is used to update the odoo setup. It will update the setup 
 You can provide the option `--dashboard` to allow access to the traefik dashboard.
 
 ```sh
-python aura-maintainer generate
+aura-maintainer generate
 ```
 
 ### Inspect
@@ -66,7 +68,7 @@ The inspect command is used to inspect the current setup. It will print data abo
 You can provide the option `--json` to get the response as json.
 
 ```sh
-python aura-maintainer inspect
+aura-maintainer inspect
 ```
 
 ### Change Domain
@@ -74,7 +76,7 @@ python aura-maintainer inspect
 The change domain command is used to change the domain of the current setup. It will update the setup in the current /opt/odoo folder.
 
 ```sh
-python aura-maintainer change_domain NEW_DOMAIN
+aura-maintainer change_domain NEW_DOMAIN
 ```
 
 ### Refresh Environment
@@ -82,19 +84,22 @@ python aura-maintainer change_domain NEW_DOMAIN
 Copys the live database and filestore to the desired environment. The database gets escaped.
 
 ```sh
-python aura-maintainer refresh-env ENVIRONMENT
+aura-maintainer refresh-env ENVIRONMENT
 ```
 
 ### Manage Dev Environments
 
 The manage dev environments command provides multiple subcommands to manage the dev environments.
 
+> [!CAUTION]
+> This functions are obsolete and will be replaced.
+
 #### add
 
 The add command adds an dev enviroment.
 
 ```sh
-python aura-maintainer manage-dev-env add PR_NUMBER
+aura-maintainer manage-dev-env add PR_NUMBER
 ```
 
 #### remove
@@ -102,7 +107,7 @@ python aura-maintainer manage-dev-env add PR_NUMBER
 The remove command removes an dev enviroment.
 
 ```sh
-python aura-maintainer manage-dev-env remove PR_NUMBER
+aura-maintainer manage-dev-env remove PR_NUMBER
 ```
 
 ### remove-all
@@ -110,7 +115,7 @@ python aura-maintainer manage-dev-env remove PR_NUMBER
 The remove-all command removes all dev envs.
 
 ```sh
-python aura-maintainer remove-all
+aura-maintainer remove-all
 ```
 
 <!-- CONTACT -->
