@@ -4,13 +4,12 @@ import shutil
 import subprocess
 
 import docker
-
 import pytest
 from click.testing import CliRunner
 from docker.errors import DockerException
 
-from src.main import cli
 from src.error_codes import DOCKER_NOT_RUNNING_ERROR_CODE, DOMAIN_NOT_CONFIGURED_ERROR_CODE
+from src.main import cli
 
 
 @pytest.fixture(autouse=True, scope='function')
@@ -25,6 +24,7 @@ def setup_environment(tmp_path):
     except Exception as e:
         print(f"Error cleaning up Docker environment: {e}")
     finally:
+        subprocess.run(['sudo', 'chmod', '-R', '777', '.'])
         shutil.rmtree(tmp_path)
         os.chdir(original_dir)  # Ensure we return to the original directory
 

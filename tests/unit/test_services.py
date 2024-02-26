@@ -30,7 +30,6 @@ class TestProxyComposeService:
         assert '--api.dashboard=true' in proxy_service.to_dict()['command']
 
 
-
 class TestOdooComposeService:
 
     def test_init(self):
@@ -43,7 +42,8 @@ class TestOdooComposeService:
         odoo_service = OdooComposeService('odoo', 'odoo.test.com', 'db_pass', 'admin_pass', '16.0', False)
         assert 'DB_PASSWORD=db_pass' in odoo_service.to_dict()['environment']
         assert 'ADMIN_PASSWD=admin_pass' in odoo_service.to_dict()['environment']
-        assert 'traefik.http.routers.odoo-websocket.middlewares=websocketHeader@file,gzip@file' in odoo_service.to_dict()['labels']
+        assert 'traefik.http.routers.odoo-websocket.middlewares=websocketHeader@file,gzip@file' in \
+               odoo_service.to_dict()['labels']
         assert odoo_service.to_dict()['image'] == 'registry.hav.media/aura_odoo/odoo:16.0'
 
 

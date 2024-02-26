@@ -7,11 +7,10 @@ import pytest
 from click.testing import CliRunner
 from docker.errors import DockerException
 
-from src import helper
-from src.main import cli
+from src.decorators import require_initiated, prevent_on_enviroment, require_database, REQUIRE_INIT_ERROR_CODE
 from src.helper import get_local_ip, check_domain_and_subdomain, get_docker_versions, generate_password, \
     remove_file_in_container
-from src.decorators import require_initiated, prevent_on_enviroment, require_database, REQUIRE_INIT_ERROR_CODE
+from src.main import cli
 
 
 class TestMain:

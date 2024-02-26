@@ -7,8 +7,8 @@ from click.testing import CliRunner
 
 from src.EnvManager import EnvManager
 from src.decorators import REQUIRE_INIT_ERROR_CODE
-from src.main import cli
 from src.error_codes import DOMAIN_NOT_CONFIGURED_ERROR_CODE
+from src.main import cli
 
 
 # noinspection PyTypeChecker
@@ -25,7 +25,7 @@ class TestChangeDomainCommand:
         except Exception as e:
             print(f"Error cleaning up Docker environment: {e}")
         finally:
-            subprocess.run(['chmod', '-R', '777', '.'])
+            subprocess.run(['sudo', 'chmod', '-R', '777', '.'])
             shutil.rmtree(tmp_path)
             os.chdir(original_dir)  # Ensure we return to the original directory
 
