@@ -13,22 +13,24 @@ from src.helper import check_domain_and_subdomain, generate_password
 @click.argument('domain')
 @click.argument('version')
 @click.option('--dev', '-d', is_flag=True, help='Enable development mode. No https and other dev related things')
+@click.option('--disable-domain-check', is_flag=True, help='Disables domain checks')
 @click.pass_context
-def init_command(ctx, domain, version, dev):
-    init(dev, domain, version, ctx.obj['compose_manager'], ctx.obj['env_manager'])
+def init_command(ctx, domain, version, dev, disable_domain_check):
+    init(dev, domain, version, disable_domain_check, ctx.obj['compose_manager'], ctx.obj['env_manager'])
 
 
-def init(dev, domain, version, compose_manager, env_manager):
+def init(dev, domain, version, disable_domain_check,  compose_manager, env_manager):
     # Check if .env file already exists
     if compose_manager.initiated:
         click.echo("Configuration has already been initialized.", err=True)
         exit(1)
     # Check if domain and subdomains point to the current server
-    if check_domain_and_subdomain(domain, dev):
-        click.echo(
-            f"Domain and subdomains must point to this server's IP. Please ensure the domain and subdomains are correctly configured.",
-            err=True)
-        exit(DOMAIN_NOT_CONFIGURED_ERROR_CODE)
+    if not disable_domain_check:
+        if check_domain_and_subdomain(domain, dev):
+            click.echo(
+                f"Domain and subdomains must point to this server's IP. Please ensure the domain and subdomains are correctly configured.",
+                err=True)
+            exit(DOMAIN_NOT_CONFIGURED_ERROR_CODE)
     # TODO: Check if we have access to images
     master_db_password = generate_password()
     live_db_password = generate_password()

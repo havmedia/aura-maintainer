@@ -83,3 +83,13 @@ class TestInitCommand:
 
         assert result.exit_code == DOMAIN_NOT_CONFIGURED_ERROR_CODE
         assert 'Domain and subdomains must point to this server\'s IP. Please ensure the domain and subdomains are correctly configured.' in result.output
+
+    def test_if_command_does_run_if_domain_check_is_disabled(self):
+        runner = CliRunner()
+
+        result = runner.invoke(cli, ['init', 'gibt-es-nicht.de', '17.0', '--disable-domain-check'])
+
+        # Check for successfully feedback
+        assert "Docker Compose file 'docker-compose.yml' updated successfully." in result.output
+        assert "Services started successfully." in result.output
+        assert result.exit_code == 0
