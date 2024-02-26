@@ -25,6 +25,7 @@ class TestChangeDomainCommand:
         except Exception as e:
             print(f"Error cleaning up Docker environment: {e}")
         finally:
+            subprocess.run(['chmod', '-R', '777', '.'])
             shutil.rmtree(tmp_path)
             os.chdir(original_dir)  # Ensure we return to the original directory
 
