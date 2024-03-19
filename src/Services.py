@@ -105,10 +105,12 @@ class OdooComposeService(ComposeService):
                 'traefik.enable=true',
                 f'traefik.http.routers.{name}.rule=Host(`{domain}`)',
                 f'traefik.http.routers.{name}.service={name}',
+                f'traefik.http.routers.{name}.priority=1',
                 f'traefik.http.routers.{name}.entrypoints={"websecure" if https else "web"}',
                 f'traefik.http.services.{name}.loadbalancer.server.port=8069',
                 # Websocket
                 f'traefik.http.routers.{name}-websocket.rule=Path(`/websocket`) && Host(`{domain}`)',
+                f'traefik.http.routers.{name}-websocket.priority=2',
                 f'traefik.http.routers.{name}-websocket.service={name}-websocket',
                 f'traefik.http.routers.{name}-websocket.entrypoints={"websecure" if https else "web"}',
                 f'traefik.http.services.{name}-websocket.loadbalancer.server.port=8072',
