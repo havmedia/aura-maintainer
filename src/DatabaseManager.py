@@ -1,12 +1,17 @@
 import subprocess
 import uuid
-from typing import Self
 
 import psycopg
 
 from src.errors import OperationOnDatabaseDeniedException, DatabaseAlreadyExistsException
 
 DB_PORT = 5432
+
+try:
+    from typing import Self
+except ImportError:
+    from typing import TypeVar
+    Self = TypeVar("Self")
 
 
 class DatabaseManager:
