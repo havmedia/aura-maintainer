@@ -1,3 +1,4 @@
+import copy
 import os.path
 import subprocess
 from typing import Union
@@ -7,6 +8,7 @@ import yaml
 
 from src.Services import ComposeService
 from src.errors import ServiceAlreadyExistsException, ServiceDoesNotExistException
+from src.helper import display_diff
 
 
 class ComposeManager:
@@ -14,7 +16,9 @@ class ComposeManager:
     def __init__(self, file_path: str = 'docker-compose.yml'):
         self.initiated = False
         self.conf_path = file_path
-        self.config = self._get_config()
+        config = self._get_config()
+        self.config = config
+        self.source_config = copy.deepcopy(config)
         self.services = self.config['services']
 
     def _get_config(self) -> dict:
@@ -31,6 +35,12 @@ class ComposeManager:
         with open(self.conf_path, 'w') as file:
             yaml.dump(self.config, file, default_flow_style=False)
         self.initiated = True
+
+    def render(self) -> str:
+        return yaml.dump(self.config, default_flow_style=False)
+
+    def print_diff(self) -> str:
+        return display_diff(yaml.dump(self.source_config, default_flow_style=False), self.render())
 
     def add_service(self, service: ComposeService):
         if service.name in self.services:
