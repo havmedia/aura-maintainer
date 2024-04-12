@@ -56,6 +56,8 @@ aura-maintainer init DOMAIN VERSION
 The generate command is used to update the odoo setup. It will update the setup in the current /opt/odoo folder.
 
 You can provide the option `--dashboard` to allow access to the traefik dashboard.
+You can provide the option `--dry` to only show what would change in the docker compose file
+
 
 ```sh
 aura-maintainer generate
