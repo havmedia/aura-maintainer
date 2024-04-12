@@ -1,3 +1,4 @@
+import difflib
 import re
 import secrets
 import socket
@@ -140,3 +141,25 @@ def copy_files_from_container(service_name: str, src_path: str, dest_path: str) 
     result.check_returncode()
 
     return True
+
+
+def display_diff(string1: str, string2: str) -> str:
+    output = []
+    matcher = difflib.SequenceMatcher(None, string1, string2)
+
+    green = '\x1b[38;5;16;48;5;2m'
+    red = '\x1b[38;5;16;48;5;1m'
+    endgreen = '\x1b[0m'
+    endred = '\x1b[0m'
+
+    for opcode, a0, a1, b0, b1 in matcher.get_opcodes():
+        if opcode == 'equal':
+            output.append(string1[a0:a1])
+        elif opcode == 'insert':
+            output.append(f'{green}{string2[b0:b1]}{endgreen}')
+        elif opcode == 'delete':
+            output.append(f'{red}{string1[a0:a1]}{endred}')
+        elif opcode == 'replace':
+            output.append(f'{green}{string2[b0:b1]}{endgreen}')
+            output.append(f'{red}{string1[a0:a1]}{endred}')
+    return ''.join(output)

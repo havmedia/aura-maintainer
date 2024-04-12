@@ -10,6 +10,7 @@ from docker.errors import DockerException
 from src.decorators import require_initiated, prevent_on_enviroment, require_database, REQUIRE_INIT_ERROR_CODE
 from src.helper import get_local_ip, check_domain_and_subdomain, get_docker_versions, generate_password, \
     remove_file_in_container
+from src import decorators
 from src.main import cli
 
 
@@ -245,7 +246,8 @@ class TestDecorators:
 
     # Test for check_database_health decorator
     def test_require_database(self, monkeypatch):
-        monkeypatch.setattr('src.helper.get_service_health', lambda _: 'unhealthy')
+
+        monkeypatch.setattr(decorators, 'get_service_health', lambda _: 'unhealthy')
 
         @require_database
         def dummy_function():

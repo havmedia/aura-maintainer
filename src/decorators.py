@@ -37,7 +37,8 @@ def require_database(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            if get_service_health('db') != 'healthy':
+            service_health = get_service_health('db')
+            if service_health != 'healthy':
                 click.echo("The database service is not healthy.", err=True)
                 exit(1)
         except docker.errors.NotFound:

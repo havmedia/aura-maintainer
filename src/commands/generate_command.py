@@ -1,22 +1,25 @@
 import click
 
 from src.Services import ProxyComposeService, OdooComposeService, PostgresComposeService, KwkhtmltopdfComposeService
-from src.helper import generate_password
+from src.helper import generate_password, display_diff
 
 
 @click.command('generate')
 @click.option('--dashboard', is_flag=True,
               help='Enable dashboard for the proxy service. Please use this only for debug purposes.')
+@click.option('--dry', is_flag=True,
+              help='Runs the generation in dry mode and do not change any files.')
 @click.pass_context
-def generate_command(ctx, dashboard):
+def generate_command(ctx, dry, dashboard):
     generate(
         dashboard=dashboard,
+        dry=dry,
         compose_manager=ctx.obj['compose_manager'],
         env_manager=ctx.obj['env_manager']
     )
 
 
-def generate(compose_manager, env_manager, dashboard=False):
+def generate(compose_manager, env_manager, dashboard=False, dry=False):
     if not env_manager.initiated:
         click.echo("Please run the 'init' command before generating the configuration.", err=True)
         exit(1)
@@ -42,5 +45,9 @@ def generate(compose_manager, env_manager, dashboard=False):
     compose_manager.set_service(db_service)
     compose_manager.set_service(kwkhtmltopdf_service)
     # Write Docker Compose file
-    compose_manager.save()
-    click.echo(f"Docker Compose file 'docker-compose.yml' updated successfully.")
+    if dry:
+        click.echo(compose_manager.print_diff())
+        click.echo(f"Docker Compose file 'docker-compose.yml' rendered successfully.")
+    else:
+        compose_manager.save()
+        click.echo(f"Docker Compose file 'docker-compose.yml' updated successfully.")

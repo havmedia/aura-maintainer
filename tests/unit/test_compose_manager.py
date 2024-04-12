@@ -36,6 +36,19 @@ class TestComposeManager:
         assert manager.initiated
         mock_file.assert_called_once_with('docker-compose.yml', 'w')
 
+    @patch('builtins.open', new_callable=mock_open)
+    def test_render(self, mock_file):
+        manager = ComposeManager()
+        manager.render()
+        assert not mock_file.called
+
+    @patch('builtins.open', new_callable=mock_open)
+    def test_print_diff(self, mock_file):
+        manager = ComposeManager()
+        manager.render()
+        assert not mock_file.called
+
+
     def test_add_service(self):
         manager = ComposeManager()
         new_service = ComposeService('new_service', 'new_image')
