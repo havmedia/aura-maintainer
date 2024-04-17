@@ -26,7 +26,7 @@ def init(dev, domain, version, disable_domain_check,  compose_manager, env_manag
         exit(1)
     # Check if domain and subdomains point to the current server
     if not disable_domain_check:
-        if check_domain_and_subdomain(domain, dev):
+        if not check_domain_and_subdomain(domain, dev):
             click.echo(
                 f"Domain and subdomains must point to this server's IP. Please ensure the domain and subdomains are correctly configured.",
                 err=True)

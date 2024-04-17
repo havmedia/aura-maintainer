@@ -16,7 +16,7 @@ def change_domain_command(ctx, new_domain):
 @require_initiated
 def change_domain(new_domain, compose_manager, env_manager):
     dev = env_manager.read_value('DEV', '0') == '1'
-    if check_domain_and_subdomain(new_domain, dev):
+    if not check_domain_and_subdomain(new_domain, dev):
         click.echo(
             f"Domain and subdomains must point to this server's IP. Please ensure the domain and subdomains are correctly configured.",
             err=True)

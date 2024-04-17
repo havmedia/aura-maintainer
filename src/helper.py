@@ -29,16 +29,16 @@ def get_local_ip():
 
 def check_domain_and_subdomain(domain: str, dev=False) -> bool:
     if not re.match(valid_hostname_regex, domain):
-        return True
+        return False
 
     if dev:
-        return False
+        return True
     try:
         local_ip = get_local_ip()
         domain_ip = socket.gethostbyname(domain)
         test_subdomain_ip = socket.gethostbyname(f'test.{domain}')
     except socket.gaierror:
-        return True
+        return False
     return domain_ip == local_ip and test_subdomain_ip == local_ip
 
 
