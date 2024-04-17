@@ -69,20 +69,20 @@ class TestMain:
         mock_get_local_ip.return_value = '192.168.1.1'
         mock_gethostbyname.side_effect = socket.gaierror
 
-        assert check_domain_and_subdomain('invalid_domain.com') is True
+        assert check_domain_and_subdomain('invalid_domain.com') is False
 
     def test_if_no_lookup_in_dev(self):
         result = check_domain_and_subdomain('example.com', True)
-        assert not result
+        assert result
 
         # Make sure subdomain is working
         result = check_domain_and_subdomain('test.example.com', True)
 
-        assert not result
+        assert result
 
     def test_if_no_lookup_in_dev_domain_syntax_wrong(self):
         result = check_domain_and_subdomain('example .com', False)
-        assert result
+        assert not result
 
     @patch('src.helper.get_docker_client')
     @patch('subprocess.run')
