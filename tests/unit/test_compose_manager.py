@@ -45,7 +45,7 @@ class TestComposeManager:
     @patch('builtins.open', new_callable=mock_open)
     def test_print_diff(self, mock_file):
         manager = ComposeManager()
-        manager.render()
+        manager.print_diff()
         assert not mock_file.called
 
 

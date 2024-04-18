@@ -39,6 +39,9 @@
 This repo contains the python Setup Maintainer for odoo setups. It is used to setup and maintain odoo setups on a server.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Requirements
+The script currently needs to be run as root.
+
 ## Commands
 
 ### init

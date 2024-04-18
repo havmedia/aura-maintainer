@@ -9,7 +9,7 @@ DB_PORT = 5432
 
 try:
     from typing import Self
-except ImportError:
+except ImportError: # pragma: no cover
     from typing import TypeVar
     Self = TypeVar("Self")
 
