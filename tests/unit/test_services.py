@@ -46,6 +46,14 @@ class TestOdooComposeService:
                odoo_service.to_dict()['labels']
         assert odoo_service.to_dict()['image'] == 'registry.hav.media/aura_odoo/odoo:16.0'
 
+    def test_with_module_mode_mounted(self):
+        odoo_service = OdooComposeService('odoo', 'odoo.test.com', 'db_pass', 'admin_pass', '16.0', False, module_mode='mounted')
+        assert 'DB_PASSWORD=db_pass' in odoo_service.to_dict()['environment']
+        assert 'ADMIN_PASSWD=admin_pass' in odoo_service.to_dict()['environment']
+        assert 'traefik.http.routers.odoo-websocket.middlewares=websocketHeader@file,gzip@file' in \
+               odoo_service.to_dict()['labels']
+        assert odoo_service.to_dict()['image'] == 'registry.hav.media/aura_odoo/odoo:16.0'
+        assert './volumes/odoo/src:/odoo/src/' in odoo_service.to_dict()['volumes']
 
 class TestPostgresComposeService:
 
