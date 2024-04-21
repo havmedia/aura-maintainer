@@ -34,32 +34,51 @@ class TestOdooComposeService:
 
     def test_init(self):
         odoo_service = OdooComposeService('odoo', 'odoo.test.com', 'db_pass', 'admin_pass', '16.0')
-        assert 'DB_PASSWORD=db_pass' in odoo_service.to_dict()['environment']
-        assert 'ADMIN_PASSWD=admin_pass' in odoo_service.to_dict()['environment']
-        assert odoo_service.to_dict()['image'] == 'registry.hav.media/aura_odoo/odoo:16.0'
+
+        config_dict = odoo_service.to_dict()
+
+        assert 'DB_PASSWORD' in config_dict['environment'] and 'db_pass' == \
+               config_dict['environment']['DB_PASSWORD']
+        assert 'ADMIN_PASSWD' in config_dict['environment'] and 'admin_pass' == \
+               config_dict['environment']['ADMIN_PASSWD']
+        assert config_dict['image'] == 'registry.hav.media/aura_odoo/odoo:16.0'
 
     def test_with_basic_auth(self):
         odoo_service = OdooComposeService('odoo', 'odoo.test.com', 'db_pass', 'admin_pass', '16.0', False)
-        assert 'DB_PASSWORD=db_pass' in odoo_service.to_dict()['environment']
-        assert 'ADMIN_PASSWD=admin_pass' in odoo_service.to_dict()['environment']
-        assert 'traefik.http.routers.odoo-websocket.middlewares=websocketHeader@file,gzip@file' in \
-               odoo_service.to_dict()['labels']
-        assert odoo_service.to_dict()['image'] == 'registry.hav.media/aura_odoo/odoo:16.0'
+
+        config_dict = odoo_service.to_dict()
+
+        assert 'DB_PASSWORD' in config_dict['environment'] and 'db_pass' == \
+               config_dict['environment']['DB_PASSWORD']
+        assert 'ADMIN_PASSWD' in config_dict['environment'] and 'admin_pass' == \
+               config_dict['environment']['ADMIN_PASSWD']
+        assert 'traefik.http.routers.odoo_odoo-websocket.middlewares' in config_dict[
+            'labels'] and 'websocketHeader@file,gzip@file' == config_dict['labels'][
+                   'traefik.http.routers.odoo_odoo-websocket.middlewares']
+        assert config_dict['image'] == 'registry.hav.media/aura_odoo/odoo:16.0'
 
     def test_with_module_mode_mounted(self):
-        odoo_service = OdooComposeService('odoo', 'odoo.test.com', 'db_pass', 'admin_pass', '16.0', False, module_mode='mounted')
-        assert 'DB_PASSWORD=db_pass' in odoo_service.to_dict()['environment']
-        assert 'ADMIN_PASSWD=admin_pass' in odoo_service.to_dict()['environment']
-        assert 'traefik.http.routers.odoo-websocket.middlewares=websocketHeader@file,gzip@file' in \
-               odoo_service.to_dict()['labels']
-        assert odoo_service.to_dict()['image'] == 'registry.hav.media/aura_odoo/odoo:16.0'
-        assert './volumes/odoo/src:/odoo/src/' in odoo_service.to_dict()['volumes']
+        odoo_service = OdooComposeService('odoo', 'odoo.test.com', 'db_pass', 'admin_pass', '16.0', False,
+                                          module_mode='mounted')
+
+        config_dict = odoo_service.to_dict()
+
+        assert 'DB_PASSWORD' in config_dict['environment'] and 'db_pass' == \
+               config_dict['environment']['DB_PASSWORD']
+        assert 'ADMIN_PASSWD' in config_dict['environment'] and 'admin_pass' == \
+               config_dict['environment']['ADMIN_PASSWD']
+        assert 'traefik.http.routers.odoo_odoo-websocket.middlewares' in config_dict[
+            'labels'] and 'websocketHeader@file,gzip@file' == config_dict['labels'][
+                   'traefik.http.routers.odoo_odoo-websocket.middlewares']
+        assert config_dict['image'] == 'registry.hav.media/aura_odoo/odoo:16.0'
+        assert './volumes/odoo/src:/odoo/src/' in config_dict['volumes']
+
 
 class TestPostgresComposeService:
 
     def test_init(self):
         postgres_service = PostgresComposeService('postgres')
-        assert f'POSTGRES_DB={POSTGRES_DB}' in postgres_service.to_dict()['environment']
+        assert 'POSTGRES_DB' in postgres_service.to_dict()['environment'] and POSTGRES_DB == postgres_service.to_dict()['environment']['POSTGRES_DB']
 
 
 class TestKwkhtmltopdfComposeService:

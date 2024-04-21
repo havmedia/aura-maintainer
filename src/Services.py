@@ -99,20 +99,20 @@ class OdooComposeService(ComposeService):
                 'ADMIN_PASSWD': admin_passwd,
                 'ADDONS_PATH': '/odoo/src/odoo/addons, /odoo/src/enterprise'
             },
-            'labels': [
-                'traefik.enable=true',
-                f'traefik.http.routers.{name}.rule=Host(`{domain}`)',
-                f'traefik.http.routers.{name}.service={name}',
-                f'traefik.http.routers.{name}.priority=1',
-                f'traefik.http.routers.{name}.entrypoints={"websecure" if https else "web"}',
-                f'traefik.http.services.{name}.loadbalancer.server.port=8069',
+            'labels': {
+                'traefik.enable': 'true',
+                f'traefik.http.routers.{name}.rule': f'Host(`{domain}`)',
+                f'traefik.http.routers.{name}.service': name,
+                f'traefik.http.routers.{name}.priority': '1',
+                f'traefik.http.routers.{name}.entrypoints': 'websecure' if https else 'web',
+                f'traefik.http.services.{name}.loadbalancer.server.port': '8069',
                 # Websocket
-                f'traefik.http.routers.{name}-websocket.rule=Path(`/websocket`) && Host(`{domain}`)',
-                f'traefik.http.routers.{name}-websocket.priority=2',
-                f'traefik.http.routers.{name}-websocket.service={name}-websocket',
-                f'traefik.http.routers.{name}-websocket.entrypoints={"websecure" if https else "web"}',
-                f'traefik.http.services.{name}-websocket.loadbalancer.server.port=8072',
-            ],
+                f'traefik.http.routers.{name}-websocket.rule': f'Path(`/websocket`) && Host(`{domain}`)',
+                f'traefik.http.routers.{name}-websocket.priority': '2',
+                f'traefik.http.routers.{name}-websocket.service': f'{name}-websocket',
+                f'traefik.http.routers.{name}-websocket.entrypoints': 'websecure' if https else 'web',
+                f'traefik.http.services.{name}-websocket.loadbalancer.server.port': '8072',
+            },
             'depends_on': [
                 'db',
                 'proxy',
@@ -124,10 +124,10 @@ class OdooComposeService(ComposeService):
         }
 
         if https:
-            config['labels'] += [
-                f'traefik.http.routers.{name}-websocket.tls.certresolver=main_resolver',
-                f'traefik.http.routers.{name}.tls.certresolver=main_resolver',
-            ]
+            config['labels'] |= {
+                f'traefik.http.routers.{name}-websocket.tls.certresolver': 'main_resolver',
+                f'traefik.http.routers.{name}.tls.certresolver': 'main_resolver',
+            }
 
         if module_mode == 'mounted':
             config['volumes'] += [
@@ -135,15 +135,15 @@ class OdooComposeService(ComposeService):
             ]
 
         if basic_auth:
-            config['labels'] += [
-                f'traefik.http.routers.odoo_{name}.middlewares=basic_auth@file,gzip@file',
-                f'traefik.http.routers.odoo_{name}-websocket.middlewares=basic_auth@file,websocketHeader@file,gzip@file',
-            ]
+            config['labels'] |= {
+                f'traefik.http.routers.odoo_{name}.middlewares': 'basic_auth@file,gzip@file',
+                f'traefik.http.routers.odoo_{name}-websocket.middlewares': 'basic_auth@file,websocketHeader@file,gzip@file',
+            }
         else:
-            config['labels'] += [
-                f'traefik.http.routers.odoo_{name}.middlewares=gzip@file',
-                f'traefik.http.routers.odoo_{name}-websocket.middlewares=websocketHeader@file,gzip@file',
-            ]
+            config['labels'] |= {
+                f'traefik.http.routers.odoo_{name}.middlewares': 'gzip@file',
+                f'traefik.http.routers.odoo_{name}-websocket.middlewares': 'websocketHeader@file,gzip@file',
+            }
         config.update(kwargs)
         super().__init__(**config)
 

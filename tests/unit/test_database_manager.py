@@ -94,7 +94,7 @@ class TestDropDb:
         # Mock subprocess
         mock_run.return_value = MagicMock(returncode=0)
 
-        db_manager.name = 'live'
+        db_manager.name = 'odoo_live'
 
         with pytest.raises(Exception):
             db_manager.drop_db()

@@ -26,5 +26,9 @@ class OdooManager:
 
         return cls(
             name=name,
-            database_name=service_definition["database_name"],
+            database_name=service_definition['environment']["DB_NAME"],
+            database_user=service_definition['environment']["DB_USER"],
+            database_password=service_definition['environment']["DB_PASSWORD"],
+            admin_password=service_definition['environment']["ADMIN_PASSWORD"],
+            addon_paths=service_definition['environment']['addon_paths'].split(', '),
         )
