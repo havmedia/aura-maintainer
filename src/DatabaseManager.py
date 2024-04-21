@@ -45,7 +45,7 @@ class DatabaseManager:
         return path
 
     def drop_db(self) -> bool:
-        if self.name == 'live':
+        if self.name == 'odoo_live':
             raise OperationOnDatabaseDeniedException('Cannot drop live database')
         result = subprocess.run(
             ['docker', 'compose', 'exec', 'db', 'sh', '-c', f'dropdb --if-exists -U postgres {self.name}'],

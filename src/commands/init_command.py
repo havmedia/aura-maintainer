@@ -40,7 +40,7 @@ def init(dev, domain, version, disable_domain_check,  compose_manager, env_manag
     env_manager.add_value('DOMAIN', domain)
     env_manager.add_value('VERSION', version)
     env_manager.add_value('MASTER_DB_PASSWORD', master_db_password)
-    env_manager.add_value('LIVE_DB_PASSWORD', live_db_password)
+    env_manager.add_value('ODOO_LIVE_DB_PASSWORD', live_db_password)
     env_manager.save()
     click.echo('Setup initialized successfully.')
     # Run generate command
@@ -52,5 +52,5 @@ def init(dev, domain, version, disable_domain_check,  compose_manager, env_manag
 
     time.sleep(5)
 
-    DatabaseManager(DEFAULT_DB, DB_USER, master_db_password).add_user('live', live_db_password)
+    DatabaseManager(DEFAULT_DB, DB_USER, master_db_password).add_user('odoo_live', live_db_password)
     compose_manager.up()

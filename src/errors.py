@@ -1,5 +1,3 @@
-
-
 class ComposeException(Exception):
     pass
 
@@ -67,5 +65,17 @@ class CannotRunOnThisEnviromentException(AuraException):
 
 class RequireDatabaseServiceException(AuraException):
     def __init__(self, message="The database service needs to be running and healthy."):
+        self.message = message
+        super().__init__(self.message)
+
+
+class EnviromentAlreadyExistException(AuraException):
+    def __init__(self, message="This environment already exist!"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class EnviromentNotExistException(AuraException):
+    def __init__(self, message="This environment does not exist!"):
         self.message = message
         super().__init__(self.message)

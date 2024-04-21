@@ -19,7 +19,7 @@ def refresh_enviroment_cli(ctx, enviroment):
 
 
 def escape_db(name: str, env_manager: EnvManager) -> bool:
-    if name.lower() == 'live':
+    if name.lower() == 'odoo_live':
         click.echo("Cannot escape the live database manually.", err=True)
         exit(1)
 
@@ -63,7 +63,7 @@ def refresh_enviroment(enviroment, compose_manager, env_manager):
     click.echo("* Removing old database")
     DatabaseManager(enviroment, 'postgres', db_password).drop_db()
     click.echo("* Copy new database")
-    path = DatabaseManager('live', 'postgres', db_password).dump_db('/tmp')
+    path = DatabaseManager('odoo_live', 'postgres', db_password).dump_db('/tmp')
     click.echo('* Restore dump')
     enviroment_db_password = env_manager.read_value(f'{enviroment}_DB_PASSWORD'.upper())
     DatabaseManager.from_dump(enviroment, enviroment, enviroment_db_password, path)
@@ -71,7 +71,7 @@ def refresh_enviroment(enviroment, compose_manager, env_manager):
     remove_file_in_container('db', path)
     click.echo('* Copy Filestore')
     enviroment_folder_path = f'volumes/{enviroment}/filestore/{enviroment}'
-    live_folder_path = 'volumes/live/filestore/live'
+    live_folder_path = 'volumes/odoo_live/filestore/odoo_live'
     if os.path.exists(enviroment_folder_path):
         shutil.rmtree(enviroment_folder_path)
     shutil.copytree(live_folder_path, enviroment_folder_path)

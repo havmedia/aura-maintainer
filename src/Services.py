@@ -91,16 +91,14 @@ class OdooComposeService(ComposeService):
             'name': name,
             'image': f'{IMAGE_ODOO}:{odoo_version}',
             'restart': 'always',
-            'environment': [
-                f'DB_NAME={name}',
-                f'DB_USER={name}',
-                f'DB_PASSWORD={db_password}',
-                f'DB_HOST=db',
-
-                f'ADMIN_PASSWD={admin_passwd}',
-
-                'ADDONS_PATH=/odoo/src/odoo/addons, /odoo/src/enterprise'
-            ],
+            'environment': {
+                'DB_NAME': name,
+                'DB_USER': name,
+                'DB_PASSWORD': db_password,
+                'DB_HOST': 'db',
+                'ADMIN_PASSWD': admin_passwd,
+                'ADDONS_PATH': '/odoo/src/odoo/addons, /odoo/src/enterprise'
+            },
             'labels': [
                 'traefik.enable=true',
                 f'traefik.http.routers.{name}.rule=Host(`{domain}`)',
@@ -138,13 +136,13 @@ class OdooComposeService(ComposeService):
 
         if basic_auth:
             config['labels'] += [
-                f'traefik.http.routers.{name}.middlewares=basic_auth@file,gzip@file',
-                f'traefik.http.routers.{name}-websocket.middlewares=basic_auth@file,websocketHeader@file,gzip@file',
+                f'traefik.http.routers.odoo_{name}.middlewares=basic_auth@file,gzip@file',
+                f'traefik.http.routers.odoo_{name}-websocket.middlewares=basic_auth@file,websocketHeader@file,gzip@file',
             ]
         else:
             config['labels'] += [
-                f'traefik.http.routers.{name}.middlewares=gzip@file',
-                f'traefik.http.routers.{name}-websocket.middlewares=websocketHeader@file,gzip@file',
+                f'traefik.http.routers.odoo_{name}.middlewares=gzip@file',
+                f'traefik.http.routers.odoo_{name}-websocket.middlewares=websocketHeader@file,gzip@file',
             ]
         config.update(kwargs)
         super().__init__(**config)
@@ -159,11 +157,11 @@ class PostgresComposeService(ComposeService):
             'ports': [
                 f'127.0.0.1:{POSTGRES_PORT}:{POSTGRES_PORT}'
             ],
-            'environment': [
-                f'POSTGRES_DB={POSTGRES_DB}',
-                'POSTGRES_PASSWORD=${MASTER_DB_PASSWORD}',
-                f'POSTGRES_USER={POSTGRES_USER}',
-            ],
+            'environment': {
+                'POSTGRES_DB': POSTGRES_DB,
+                'POSTGRES_PASSWORD': '${MASTER_DB_PASSWORD}',
+                'POSTGRES_USER': POSTGRES_USER
+            },
             'healthcheck': {
                 'test': 'pg_isready -U postgres',
                 'interval': '5s',
