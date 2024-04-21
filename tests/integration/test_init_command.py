@@ -58,7 +58,7 @@ class TestInitCommand:
 
         containers = client.containers.list()
 
-        compose_services = ['live', 'db', 'proxy', 'kwkhtmltopdf']
+        compose_services = ['odoo_live', 'db', 'proxy', 'kwkhtmltopdf']
 
         for service in compose_services:
             # Check if there is a running container for each service
