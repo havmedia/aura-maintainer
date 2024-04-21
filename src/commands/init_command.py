@@ -6,6 +6,7 @@ from src.DatabaseManager import DatabaseManager
 from src.commands.generate_command import generate
 from src.constants import DB_USER, DEFAULT_DB
 from src.error_codes import DOMAIN_NOT_CONFIGURED_ERROR_CODE
+from src.errors import AlreadyInitializedException
 from src.helper import check_domain_and_subdomain, generate_password
 
 
@@ -22,8 +23,7 @@ def init_command(ctx, domain, version, dev, disable_domain_check):
 def init(dev, domain, version, disable_domain_check,  compose_manager, env_manager):
     # Check if .env file already exists
     if compose_manager.initiated:
-        click.echo("Configuration has already been initialized.", err=True)
-        exit(1)
+        raise AlreadyInitializedException()
     # Check if domain and subdomains point to the current server
     if not disable_domain_check:
         if not check_domain_and_subdomain(domain, dev):

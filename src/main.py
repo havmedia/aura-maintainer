@@ -3,8 +3,9 @@ import click
 from src.ComposeManager import ComposeManager
 from src.EnvManager import EnvManager
 from src.commands import change_domain_command, init_command, generate_command, inspect_command, mount_modules_command, \
-    refresh_enviroment_command
+    refresh_enviroment_command, manage_enviroment_command
 from src.error_codes import DOCKER_NOT_RUNNING_ERROR_CODE
+from src.errors import AuraException
 from src.helper import get_docker_versions
 
 
@@ -23,13 +24,22 @@ def cli(ctx):
     }
 
 
+def cli_secure():
+    try:
+        cli()
+    except AuraException as e:
+        click.echo(e.message, err=True)
+
+        exit(1)
+
 cli.add_command(init_command.init_command)
 cli.add_command(change_domain_command.change_domain_command)
 cli.add_command(generate_command.generate_command)
 cli.add_command(inspect_command.inspect_command)
-# cli.add_command(manage_dev_env_command.command_)
+cli.add_command(manage_enviroment_command.manage_enviroment)
 cli.add_command(mount_modules_command.command_mount_modules)
+# Todo: Move to subcommand for manage_enviroment
 cli.add_command(refresh_enviroment_command.refresh_enviroment_cli)
 
 if __name__ == '__main__':
-    cli()
+    cli_secure()

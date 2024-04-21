@@ -3,8 +3,7 @@ from functools import wraps
 import click
 import docker
 
-REQUIRE_INIT_ERROR_CODE = 9
-
+from src.errors import CannotRunOnThisEnviromentException, RequireDatabaseServiceException, RequireInitializedException
 from src.helper import get_service_health
 
 
@@ -12,8 +11,7 @@ def require_initiated(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         if not click.get_current_context().obj['compose_manager'].initiated:
-            click.echo("Please run the 'init' command before running this command.", err=True)
-            exit(REQUIRE_INIT_ERROR_CODE)
+            raise RequireInitializedException()
         return func(*args, **kwargs)
 
     return wrapper
@@ -24,8 +22,7 @@ def prevent_on_enviroment(*disallowed_services):
         @wraps(func)
         def wrapper(*args, **kwargs):
             if kwargs.get('enviroment') in disallowed_services or (args and args[0] in disallowed_services):
-                click.echo(f"You cannot run this command for the {', '.join(disallowed_services)} enviroments.", err=True)
-                exit(1)
+                raise CannotRunOnThisEnviromentException(f"You cannot run this command for the {', '.join(disallowed_services)} enviroments.")
             return func(*args, **kwargs)
 
         return wrapper
@@ -39,11 +36,9 @@ def require_database(func):
         try:
             service_health = get_service_health('db')
             if service_health != 'healthy':
-                click.echo("The database service is not healthy.", err=True)
-                exit(1)
+                raise RequireDatabaseServiceException("The database service is not healthy.")
         except docker.errors.NotFound:
-            click.echo("The database service is not running.", err=True)
-            exit(1)
+            raise RequireDatabaseServiceException("The database service is not running.")
         return func(*args, **kwargs)
 
     return wrapper

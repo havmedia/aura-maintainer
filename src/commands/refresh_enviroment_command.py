@@ -6,7 +6,7 @@ import click
 
 from src.DatabaseManager import DatabaseManager
 from src.EnvManager import EnvManager
-from src.constants import DB_USER, DEFAULT_DB
+from src.constants import DB_USER, DEFAULT_DB, PROTECTED_SERVICES
 from src.decorators import require_initiated, require_database, prevent_on_enviroment
 from src.helper import remove_file_in_container
 
@@ -49,7 +49,7 @@ def escape_db(name: str, env_manager: EnvManager) -> bool:
 
 @require_initiated
 @require_database
-@prevent_on_enviroment('live')
+@prevent_on_enviroment(*PROTECTED_SERVICES)
 def refresh_enviroment(enviroment, compose_manager, env_manager):
     db_password = env_manager.read_value('MASTER_DB_PASSWORD')
 
