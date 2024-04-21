@@ -53,11 +53,10 @@ def escape_db(name: str, env_manager: EnvManager) -> bool:
 def refresh_enviroment(enviroment, compose_manager, env_manager):
     db_password = env_manager.read_value('MASTER_DB_PASSWORD')
 
-    if enviroment != 'pre':
-        # Check if the environment exists
-        if enviroment not in compose_manager.services.keys() or not enviroment.startswith('odoo'):
-            click.echo(f"The environment {enviroment} does not exist or isn't an odoo env.", err=True)
-            exit(1)
+    # Check if the environment exists
+    if enviroment not in compose_manager.services.keys() or not enviroment.startswith('odoo'):
+        click.echo(f"The environment {enviroment} does not exist or isn't an odoo env.", err=True)
+        exit(1)
     click.echo(f"Refreshing {enviroment} environment")
     click.echo("* Stopping environment")
     compose_manager.stop([enviroment])
@@ -71,7 +70,7 @@ def refresh_enviroment(enviroment, compose_manager, env_manager):
     click.echo('* Remove dump')
     remove_file_in_container('db', path)
     click.echo('* Copy Filestore')
-    enviroment_folder_path = f'volumes/{enviroment}/filestore/pre'
+    enviroment_folder_path = f'volumes/{enviroment}/filestore/{enviroment}'
     live_folder_path = 'volumes/live/filestore/live'
     if os.path.exists(enviroment_folder_path):
         shutil.rmtree(enviroment_folder_path)

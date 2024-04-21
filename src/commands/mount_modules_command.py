@@ -28,7 +28,6 @@ def mount_modules(compose_manager: ComposeManager, env_manager: EnvManager):
 
     # Copy files for each container
     copy_files_from_container('live', '/odoo/src/', './volumes/live/src')
-    copy_files_from_container('pre', '/odoo/src/', './volumes/pre/src')
 
     for service_name in [key for key in compose_manager.services.keys() if key.startswith("odoo_dev")]:
         copy_files_from_container(service_name, '/odoo/src/', f'./volumes/{service_name}/src')

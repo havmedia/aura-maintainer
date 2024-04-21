@@ -33,15 +33,11 @@ def generate(compose_manager, env_manager, dashboard=False, dry=False):
                                       admin_passwd=generate_password(), odoo_version=version, basic_auth=False,
                                       https=not is_dev,
                                       module_mode=module_mode)  # Generate a random password each time because it will never be needed
-    pre_service = OdooComposeService(name='pre', domain=f'pre.{domain}', db_password='${PRE_DB_PASSWORD}',
-                                     admin_passwd=generate_password(), odoo_version=version, https=not is_dev,
-                                     module_mode=module_mode)
     db_service = PostgresComposeService(name='db')
     kwkhtmltopdf_service = KwkhtmltopdfComposeService(name='kwkhtmltopdf')
     # Update services
     compose_manager.set_service(proxy_service)
     compose_manager.set_service(live_service)
-    compose_manager.set_service(pre_service)
     compose_manager.set_service(db_service)
     compose_manager.set_service(kwkhtmltopdf_service)
     # Write Docker Compose file
