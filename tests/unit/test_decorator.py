@@ -50,6 +50,21 @@ class TestDecorators:
 
         assert cm.value.code == 1
 
+    def test_prevent_on_multiple_enviroment(self):
+        @prevent_on_enviroment('live', 'db', 'proxy')
+        def dummy_function(environment):
+            return True
+
+        with pytest.raises(SystemExit) as cm:
+            dummy_function('live')
+
+        assert cm.value.code == 1
+
+        with pytest.raises(SystemExit) as cm:
+            dummy_function('db')
+
+        assert cm.value.code == 1
+
     def test_prevent_on_enviroment_success(self):
         @prevent_on_enviroment('live')
         def dummy_function(environment):

@@ -19,12 +19,12 @@ def require_initiated(func):
     return wrapper
 
 
-def prevent_on_enviroment(disallowed_env):
+def prevent_on_enviroment(*disallowed_services):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if args[0] == disallowed_env:
-                click.echo(f"You cannot run this command on the {disallowed_env} enviroment.", err=True)
+            if kwargs.get('enviroment') in disallowed_services or (args and args[0] in disallowed_services):
+                click.echo(f"You cannot run this command for the {', '.join(disallowed_services)} enviroments.", err=True)
                 exit(1)
             return func(*args, **kwargs)
 
