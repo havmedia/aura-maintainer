@@ -1,3 +1,5 @@
+from src.constants import ODOO_SERVICE_PREFIX
+
 IMAGE_TRAEFIK = 'registry.hav.media/aura_odoo/traefik:v2.10'
 IMAGE_ODOO = 'registry.hav.media/aura_odoo/odoo'
 IMAGE_KWKHTMLTOPDF = 'registry.hav.media/aura_odoo/kwkhtmltopdf:0.12.5'
@@ -136,13 +138,13 @@ class OdooComposeService(ComposeService):
 
         if basic_auth:
             config['labels'] |= {
-                f'traefik.http.routers.odoo_{name}.middlewares': 'basic_auth@file,gzip@file',
-                f'traefik.http.routers.odoo_{name}-websocket.middlewares': 'basic_auth@file,websocketHeader@file,gzip@file',
+                f'traefik.http.routers.{ODOO_SERVICE_PREFIX}{name}.middlewares': 'basic_auth@file,gzip@file',
+                f'traefik.http.routers.{ODOO_SERVICE_PREFIX}{name}-websocket.middlewares': 'basic_auth@file,websocketHeader@file,gzip@file',
             }
         else:
             config['labels'] |= {
-                f'traefik.http.routers.odoo_{name}.middlewares': 'gzip@file',
-                f'traefik.http.routers.odoo_{name}-websocket.middlewares': 'websocketHeader@file,gzip@file',
+                f'traefik.http.routers.{ODOO_SERVICE_PREFIX}{name}.middlewares': 'gzip@file',
+                f'traefik.http.routers.{ODOO_SERVICE_PREFIX}{name}-websocket.middlewares': 'websocketHeader@file,gzip@file',
             }
         config.update(kwargs)
         super().__init__(**config)
