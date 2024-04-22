@@ -50,3 +50,5 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: havmedia/aura-maintainer
+          ignore:
+            - "test_*.py"
