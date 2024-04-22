@@ -1,14 +1,67 @@
 import socket
 import subprocess
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, Mock
 
+import docker
 import pytest
 from click.testing import CliRunner
 from docker.errors import DockerException
 
 from src.helper import display_diff, remove_file_in_container, copy_files_from_container, get_local_ip, \
-    check_domain_and_subdomain, generate_password, get_docker_versions
+    check_domain_and_subdomain, generate_password, get_docker_versions, get_docker_client, get_service_health, \
+    ensure_services_healthy
 from src.main import cli
+
+
+@pytest.fixture
+def mocked_docker_client():
+    with patch('docker.from_env') as mock_docker_client:
+        yield mock_docker_client
+
+
+# Mocking get_service_health function
+@pytest.fixture
+def mocked_get_service_health():
+    with patch('src.helper.get_service_health') as mock_get_service_health:
+        yield mock_get_service_health
+
+
+# Mocking time.sleep function
+@pytest.fixture
+def mocked_sleep():
+    with patch('time.sleep') as mock_sleep:
+        yield mock_sleep
+
+class TestGetServiceHealth:
+    def test_get_service_health_with_existing_service(self, mocked_docker_client):
+        # Mocking the container
+        mock_container = Mock()
+        mock_container.attrs = {'State': {'Health': {'Status': 'healthy'}}}
+        mocked_docker_client.return_value.containers.get.return_value = mock_container
+
+        # Call the function
+        service_name = 'test_service'
+        health_status = get_service_health(service_name)
+
+        # Assertions
+        assert health_status == 'healthy'
+        mocked_docker_client.return_value.containers.get.assert_called_once_with(service_name)
+
+    def test_get_service_health_with_non_existing_service(self, mocked_docker_client):
+        # Mocking NotFound error
+        mocked_docker_client.return_value.containers.get.side_effect = docker.errors.NotFound("Service not found")
+
+        # Call the function
+        service_name = 'non_existing_service'
+        with pytest.raises(docker.errors.NotFound):
+            get_service_health(service_name)
+
+
+class TestGetDockerClient:
+
+    def test_get_docker_client(self, mocked_docker_client):
+        get_docker_client()
+        mocked_docker_client.assert_called_once()
 
 
 class TestDisplayDiff:

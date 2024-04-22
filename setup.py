@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="aura_maintainer",
-    version="0.2",
+    version="0.3",
     python_requires='>=3.9',
     packages=find_packages(),
     include_package_data=True,
@@ -14,7 +14,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'aura-maintainer=src.main:cli'
+            'aura-maintainer=src.main:cli_secure'
         ],
     },
 )

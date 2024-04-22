@@ -6,7 +6,7 @@ import pytest
 from click.testing import CliRunner
 
 from src.EnvManager import EnvManager
-from src.decorators import REQUIRE_INIT_ERROR_CODE
+from src.errors import RequireInitializedException
 from src.error_codes import DOMAIN_NOT_CONFIGURED_ERROR_CODE
 from src.main import cli
 
@@ -62,9 +62,9 @@ class TestChangeDomainCommand:
 
             result = runner.invoke(cli, ['change-domain', new_domain])
 
-            assert result.exit_code == REQUIRE_INIT_ERROR_CODE
+            assert result.exit_code == 1
 
-            assert 'Please run the \'init\' command before running this command' in result.output
+            assert isinstance(result.exception, RequireInitializedException)
         finally:
             os.chdir(original_dir)
 

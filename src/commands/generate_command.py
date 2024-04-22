@@ -29,19 +29,15 @@ def generate(compose_manager, env_manager, dashboard=False, dry=False):
     module_mode = env_manager.read_value('MODULE_MODE') if env_manager.read_value('MODULE_MODE') else 'included'
     # Store domain in the proxy service for later reference
     proxy_service = ProxyComposeService(name='proxy', domain=domain, dashboard=dashboard, https=not is_dev)
-    live_service = OdooComposeService(name='live', domain=domain, db_password='${LIVE_DB_PASSWORD}',
+    live_service = OdooComposeService(name='odoo_live', domain=domain, db_password='${ODOO_LIVE_DB_PASSWORD}',
                                       admin_passwd=generate_password(), odoo_version=version, basic_auth=False,
                                       https=not is_dev,
                                       module_mode=module_mode)  # Generate a random password each time because it will never be needed
-    pre_service = OdooComposeService(name='pre', domain=f'pre.{domain}', db_password='${PRE_DB_PASSWORD}',
-                                     admin_passwd=generate_password(), odoo_version=version, https=not is_dev,
-                                     module_mode=module_mode)
     db_service = PostgresComposeService(name='db')
     kwkhtmltopdf_service = KwkhtmltopdfComposeService(name='kwkhtmltopdf')
     # Update services
     compose_manager.set_service(proxy_service)
     compose_manager.set_service(live_service)
-    compose_manager.set_service(pre_service)
     compose_manager.set_service(db_service)
     compose_manager.set_service(kwkhtmltopdf_service)
     # Write Docker Compose file

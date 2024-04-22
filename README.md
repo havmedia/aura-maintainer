@@ -3,6 +3,7 @@
 
 <!-- PROJECT SHIELDS -->
 [![LinkedIn][linkedin-shield]][linkedin-url]
+[![Status Action][action-shield]][action-url]
 <br><br>
 
 <!-- PROJECT LOGO -->
@@ -135,3 +136,6 @@ HAV Media GmbH - <a href="mailto:info@hav.media"/>info@hav.media</a>
 
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/company/havmedia/
+
+[action-shield]: https://img.shields.io/github/actions/workflow/status/havmedia/aura-maintainer/pylint.yml?style=for-the-badge
+[action-url]: https://github.com/havmedia/aura-maintainer/actions/workflows/pylint.yml

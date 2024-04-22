@@ -6,7 +6,7 @@ import click
 
 from src.DatabaseManager import DatabaseManager
 from src.EnvManager import EnvManager
-from src.constants import DB_USER, DEFAULT_DB
+from src.constants import DB_USER, DEFAULT_DB, PROTECTED_SERVICES
 from src.decorators import require_initiated, require_database, prevent_on_enviroment
 from src.helper import remove_file_in_container
 
@@ -19,7 +19,7 @@ def refresh_enviroment_cli(ctx, enviroment):
 
 
 def escape_db(name: str, env_manager: EnvManager) -> bool:
-    if name.lower() == 'live':
+    if name.lower() == 'odoo_live':
         click.echo("Cannot escape the live database manually.", err=True)
         exit(1)
 
@@ -49,30 +49,29 @@ def escape_db(name: str, env_manager: EnvManager) -> bool:
 
 @require_initiated
 @require_database
-@prevent_on_enviroment('live')
+@prevent_on_enviroment(*PROTECTED_SERVICES)
 def refresh_enviroment(enviroment, compose_manager, env_manager):
     db_password = env_manager.read_value('MASTER_DB_PASSWORD')
 
-    if enviroment != 'pre':
-        # Check if the environment exists
-        if enviroment not in compose_manager.services.keys() or not enviroment.startswith('odoo'):
-            click.echo(f"The environment {enviroment} does not exist or isn't an odoo env.", err=True)
-            exit(1)
+    # Check if the environment exists
+    if enviroment not in compose_manager.services.keys() or not enviroment.startswith('odoo'):
+        click.echo(f"The environment {enviroment} does not exist or isn't an odoo env.", err=True)
+        exit(1)
     click.echo(f"Refreshing {enviroment} environment")
     click.echo("* Stopping environment")
     compose_manager.stop([enviroment])
     click.echo("* Removing old database")
     DatabaseManager(enviroment, 'postgres', db_password).drop_db()
     click.echo("* Copy new database")
-    path = DatabaseManager('live', 'postgres', db_password).dump_db('/tmp')
+    path = DatabaseManager('odoo_live', 'postgres', db_password).dump_db('/tmp')
     click.echo('* Restore dump')
     enviroment_db_password = env_manager.read_value(f'{enviroment}_DB_PASSWORD'.upper())
     DatabaseManager.from_dump(enviroment, enviroment, enviroment_db_password, path)
     click.echo('* Remove dump')
     remove_file_in_container('db', path)
     click.echo('* Copy Filestore')
-    enviroment_folder_path = f'volumes/{enviroment}/filestore/pre'
-    live_folder_path = 'volumes/live/filestore/live'
+    enviroment_folder_path = f'volumes/{enviroment}/filestore/{enviroment}'
+    live_folder_path = 'volumes/odoo_live/filestore/odoo_live'
     if os.path.exists(enviroment_folder_path):
         shutil.rmtree(enviroment_folder_path)
     shutil.copytree(live_folder_path, enviroment_folder_path)

@@ -54,6 +54,9 @@ class ComposeManager:
 
         self.services[service.name] = service.to_dict()
 
+    def get_services(self):
+        return self.services
+
     def set_service(self, service: ComposeService):
         if service.name not in self.services:
             self.add_service(service)
