@@ -1,4 +1,4 @@
-IMAGE_TRAEFIK = 'registry.hav.media/aura_odoo/traefik:v2.10'
+IMAGE_TRAEFIK = 'registry.hav.media/aura_odoo/traefik:v2.11'
 IMAGE_ODOO = 'registry.hav.media/aura_odoo/odoo'
 IMAGE_KWKHTMLTOPDF = 'registry.hav.media/aura_odoo/kwkhtmltopdf:0.12.5'
 IMAGE_POSTGRES = 'registry.hav.media/aura_odoo/postgres:15-alpine'
